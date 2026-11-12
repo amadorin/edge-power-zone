@@ -1,8 +1,10 @@
-# Zona Potencia 3s (Edge 1060)
+# Zona Potencia 3s (Edge 1050 y 1060)
 
-Campo de datos Connect IQ para Garmin Edge 1060: potencia de 3 segundos a lo grande, con barra dinámica de zona objetivo, gráfico de los últimos 40 segundos, FC, tiempo, media, NP, TSS y cadencia.
+Campo de datos Connect IQ para Garmin Edge 1050 (y 1060): potencia de 3 segundos a lo grande, con barra dinámica de zona objetivo, gráfico de los últimos 40 segundos, FC, tiempo, media, NP, TSS y cadencia.
 
-![maqueta](docs/maqueta.png)
+![maqueta tiles](docs/maqueta-tiles.png)
+
+Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no se ve bien en tu Edge, hay un diseño simple de respaldo (`releases/edge-power-zone-edge1050-simple.prg`, maqueta antigua en `docs/maqueta.png`).
 
 ## Qué muestra
 
@@ -23,27 +25,27 @@ Garmin no permite a un campo de datos leer el paso de entrenamiento activo (`Act
 
 Cambiar los ajustes (incluso en plena salida, desde el móvil):
 
-- **Garmin Connect (móvil)**: Más → Dispositivos Garmin → Edge 1060 → Gestión de aplicaciones Connect IQ → Zona Potencia 3s → Ajustes.
+- **Garmin Connect (móvil)**: Más → Dispositivos Garmin → Edge 1050 → Gestión de aplicaciones Connect IQ → Zona Potencia 3s → Ajustes.
 - Valores por defecto: objetivo 215-258 W, FTP 430 W.
 - Para desactivar la zona: pon el objetivo mínimo a 0 (la barra pasa a escala automática y la pastilla muestra SIN OBJETIVO).
 
 ## Instalación (sin compilar)
 
-1. Copia `releases/edge-power-zone.prg` al Edge 1060 por USB, en la carpeta `GARMIN/Apps`.
+1. Copia `releases/edge-power-zone-edge1050.prg` (diseño tiles, Edge 1050; `-edge1060.prg` si fuera un 1060) al Edge por USB, en la carpeta `GARMIN/Apps`.
 2. Expulsa el Edge con seguridad.
 3. En el Edge: Menú → Perfiles de actividad → (tu perfil de bici) → Pantallas de datos → añade una pantalla nueva de **1 campo** → entra en el campo → **Connect IQ** → **Zona Potencia 3s**.
 
-Está diseñado para una pantalla de un solo campo (480x800). En pantallas con más campos se reescala, pero la distribución está pensada para pantalla completa.
+Edge 1050 y 1060 tienen la misma pantalla (480x800, API 6.0). Está diseñado para una pantalla de un solo campo; el dibujo usa coordenadas proporcionales al tamaño real. En pantallas con más campos se reescala, pero la distribución está pensada para pantalla completa.
 
 ## Compilar desde cero
 
-Necesitas: Java, el **Connect IQ SDK 9.3.0 o superior** con el dispositivo **Edge 1060** descargado, y una clave de desarrollador.
+Necesitas: Java, el **Connect IQ SDK 9.3.0 o superior** con el dispositivo **Edge 1050** (y/o 1060) descargado, y una clave de desarrollador.
 
 ### 1. SDK Manager
 
 1. Descarga el Connect IQ SDK Manager: https://developer.garmin.com/connect-iq/sdk/
 2. Ábrelo e inicia sesión con tu cuenta Garmin.
-3. Instala el SDK más reciente y descarga el dispositivo **Edge 1060** (pestaña Devices).
+3. Instala el SDK más reciente y descarga el dispositivo **Edge 1050** (pestaña Devices).
 
 (Opcional: VS Code con la extensión "Monkey C" de Garmin; permite compilar con Ctrl/Cmd+Shift+B. No hace falta para compilar por terminal.)
 
@@ -60,7 +62,7 @@ Guarda `developer_key.der`: firmar con otra clave crea una app distinta y el Edg
 
 ```bash
 export SDK=~/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.3.0-<id>   # tu ruta del SDK
-$SDK/bin/monkeyc -f monkey.jungle -d edge1060 -y developer_key.der -o releases/edge-power-zone.prg -w
+$SDK/bin/monkeyc -f monkey.jungle -d edge1050 -y developer_key.der -o releases/edge-power-zone-edge1050.prg -w
 ```
 
 En macOS/Windows el SDK vive en `~/Library/Application Support/Garmin/ConnectIQ/Sdks/...` (macOS) o `%APPDATA%\Garmin\ConnectIQ\Sdks\...` (Windows), y `monkeyc` está en la carpeta `bin` del SDK.
@@ -69,7 +71,7 @@ En macOS/Windows el SDK vive en `~/Library/Application Support/Garmin/ConnectIQ/
 
 ```bash
 $SDK/bin/connectiq &          # abre el simulador
-$SDK/bin/monkeydo releases/edge-power-zone.prg edge1060
+$SDK/bin/monkeydo releases/edge-power-zone-edge1050.prg edge1050
 ```
 
 En el simulador: menú **Simulation → FIT Data** o los valores simulados para alimentar potencia/FC/cadencia.
@@ -77,10 +79,14 @@ En el simulador: menú **Simulation → FIT Data** o los valores simulados para 
 ## Estructura
 
 ```
-manifest.xml                  # app tipo datafield, solo edge1060, minApiLevel 3.4.0
+manifest.xml                  # app tipo datafield, edge1050 y edge1060, minApiLevel 3.4.0
 monkey.jungle
 source/PowerZoneApp.mc        # entrada de la app
 source/PowerZoneView.mc       # toda la lógica y el dibujo
 resources/                    # textos (español), ajustes (objetivo/FTP), icono
-releases/edge-power-zone.prg  # compilado listo para GARMIN/Apps
+releases/edge-power-zone-edge1050.prg  # diseño tiles, Edge 1050
+releases/edge-power-zone-edge1050-simple.prg  # diseño simple anterior (respaldo)
+releases/edge-power-zone-edge1060-simple.prg  # idem, Edge 1060
+releases/edge-power-zone-edge1060.prg  # diseño tiles, Edge 1060
 ```
+
