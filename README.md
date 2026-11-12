@@ -116,3 +116,7 @@ releases/edge-power-zone-edge1060-simple.prg  # idem, Edge 1060
 releases/edge-power-zone-edge1060.prg  # diseño tiles, Edge 1060
 ```
 
+
+## Páginas de la fila inferior (toque)
+
+La fila inferior tiene 2 páginas: IF / TSS / cadencia y velocidad / distancia / desnivel. Toca la mitad izquierda o derecha de esa fila para cambiar de página (puntos indicadores debajo). Un toque en cualquier otro sitio sigue abriendo el menú nativo del Edge. Requiere que el campo esté solo en la pantalla de datos (campo a pantalla completa). Probado solo en simulador de compilación; pendiente de confirmar en el Edge.

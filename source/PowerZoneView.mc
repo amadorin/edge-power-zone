@@ -46,6 +46,10 @@ class PowerZoneView extends WatchUi.DataField {
     private var mLapN = 0;
     private var mHr = null;
     private var mCad = null;
+    private var mSpeed = null;
+    private var mDist = null;
+    private var mAsc = null;
+    private var mPage = 0;
     private var mTimerSec = 0;
 
     // Buffer 3 s
@@ -228,6 +232,11 @@ class PowerZoneView extends WatchUi.DataField {
     }
 
     // La media del lap se acumula aqui (Activity.Info no trae potencia media de lap).
+    function turnPage(d as Number) as Void {
+        mPage = (mPage + d + 2) % 2;
+        WatchUi.requestUpdate();
+    }
+
     function onTimerLap() as Void { endStep(); resetStepAcc(); mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
     function onWorkoutStepComplete() as Void { endStep(); resetStepAcc(); mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
     function onTimerReset() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = 0; }
@@ -265,6 +274,9 @@ class PowerZoneView extends WatchUi.DataField {
         loadSettings();
         mHr = info.currentHeartRate;
         mCad = info.currentCadence;
+        mSpeed = info.currentSpeed;
+        mDist = info.elapsedDistance;
+        mAsc = info.totalAscent;
         mAvgPower = info.averagePower;
         mTimerSec = (info.timerTime != null) ? info.timerTime / 1000 : 0;
         mHasPower = (info.currentPower != null) || (info.averagePower != null);
@@ -685,7 +697,8 @@ class PowerZoneView extends WatchUi.DataField {
             return;
         }
 
-        // ---------- IF (NP total / FTP) / TSS / CADENCIA ----------
+        // ---------- casillas inferiores, 2 paginas (toque izq/der) ----------
+        if (mPage == 0) {
         tile(dc, 8, 672, 158, 792, C_BLUE, "IF");
         tile(dc, 165, 672, 315, 792, C_AMBER, "TSS");
         tile(dc, 322, 672, 472, 792, C_GREEN, "CADENCIA");
@@ -696,6 +709,22 @@ class PowerZoneView extends WatchUi.DataField {
         txt(dc, 182, 748, Graphics.FONT_NUMBER_MILD, mHasPower ? mTss.format("%.1f") : "--", C_WHITE, JL);
         txt(dc, 340, 748, Graphics.FONT_NUMBER_MILD, (mCad != null) ? mCad.toString() : "--", C_WHITE, JL);
         txt(dc, 460, 774, Graphics.FONT_XTINY, "rpm", C_GREY, JR);
+        } else {
+        tile(dc, 8, 672, 158, 792, C_BLUE, "VELOC");
+        tile(dc, 165, 672, 315, 792, C_AMBER, "DIST");
+        tile(dc, 322, 672, 472, 792, C_GREEN, "DESNIVEL");
+        txt(dc, 26, 748, Graphics.FONT_NUMBER_MILD, (mSpeed != null) ? (mSpeed * 3.6f).format("%.1f") : "--", C_WHITE, JL);
+        txt(dc, 146, 774, Graphics.FONT_XTINY, "km/h", C_GREY, JR);
+        txt(dc, 182, 748, Graphics.FONT_NUMBER_MILD, (mDist != null) ? (mDist / 1000.0f).format("%.1f") : "--", C_WHITE, JL);
+        txt(dc, 303, 774, Graphics.FONT_XTINY, "km", C_GREY, JR);
+        txt(dc, 340, 748, Graphics.FONT_NUMBER_MILD, (mAsc != null) ? mAsc.format("%d") : "--", C_WHITE, JL);
+        txt(dc, 460, 774, Graphics.FONT_XTINY, "m", C_GREY, JR);
+        }
+        // puntos de pagina
+        for (var i = 0; i < 2; i++) {
+            dc.setColor(i == mPage ? C_WHITE : C_GREY, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(px(228 + i * 24), py(796), pw(4) > 2 ? pw(4) : 2);
+        }
     }
 
 }

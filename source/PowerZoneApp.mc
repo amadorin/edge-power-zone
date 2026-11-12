@@ -9,7 +9,8 @@ class PowerZoneApp extends Application.AppBase {
     }
 
     function getInitialView() {
-        return [new PowerZoneView()];
+        var v = new PowerZoneView();
+        return [v, new PzTapDelegate(v)];
     }
 
     // Ajustes en el propio Edge: mantener pulsado el campo > engranaje > Connect IQ.
