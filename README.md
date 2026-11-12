@@ -29,13 +29,19 @@ Cambiar los ajustes (incluso en plena salida, desde el móvil):
 - Valores por defecto: objetivo 215-258 W, FTP 430 W.
 - Para desactivar la zona: pon el objetivo mínimo a 0 (la barra pasa a escala automática y la pastilla muestra SIN OBJETIVO).
 
-## Instalación (sin compilar)
+## Instalación rápida (2 minutos, sin compilar)
 
-1. Copia `releases/edge-power-zone-edge1050.prg` (diseño tiles, Edge 1050; `-edge1060.prg` si fuera un 1060) al Edge por USB, en la carpeta `GARMIN/Apps`.
-2. Expulsa el Edge con seguridad.
-3. En el Edge: Menú → Perfiles de actividad → (tu perfil de bici) → Pantallas de datos → añade una pantalla nueva de **1 campo** → entra en el campo → **Connect IQ** → **Zona Potencia 3s**.
+1. Elige tu archivo en la carpeta [`releases/`](releases/):
+   - **Edge 1050**: `edge-power-zone-edge1050.prg`
+   - **Edge 1060**: `edge-power-zone-edge1060.prg`
+   - Si algo no se ve bien en tu Edge, prueba el diseño simple: el mismo nombre acabado en `-simple.prg`.
+2. Descárgalo desde GitHub (abre el archivo y pulsa el icono de descarga, o "Download raw file").
+3. Conecta el Edge al ordenador por USB y copia el `.prg` a la carpeta `GARMIN/Apps` del Edge.
+4. Expulsa el Edge con seguridad y desconecta el cable. Espera a que reinicie.
+5. En el Edge: Menú → Perfiles de actividad → tu perfil de bici → Pantallas de datos → añade una pantalla nueva de **1 campo** → pulsa el campo → **Connect IQ** → **Zona Potencia 3s**.
+6. Pon tu objetivo y tu FTP (ver "Cambiar los ajustes" arriba): por defecto salen 215-258 W y FTP 430 W, que casi seguro no son los tuyos.
 
-Edge 1050 y 1060 tienen la misma pantalla (480x800, API 6.0). Está diseñado para una pantalla de un solo campo; el dibujo usa coordenadas proporcionales al tamaño real. En pantallas con más campos se reescala, pero la distribución está pensada para pantalla completa.
+Edge 1050 y 1060 tienen la misma pantalla (480x800, API 6.0). Está pensado para una pantalla de un solo campo. Uso bajo tu responsabilidad; proyecto personal, sin relación con Garmin.
 
 ## Compilar desde cero
 
