@@ -1,0 +1,5 @@
+<properties>
+    <property id="objLow" type="number">215</property>
+    <property id="objHigh" type="number">258</property>
+    <property id="ftp" type="number">430</property>
+</properties>

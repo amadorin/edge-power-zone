@@ -1,0 +1,7 @@
+developer_key.pem
+developer_key.der
+releases/gen/
+releases/external-mir/
+releases/internal-mir/
+releases/*.debug.xml
+releases/*-settings.json

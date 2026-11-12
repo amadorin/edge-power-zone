@@ -1,0 +1,7 @@
+<resources>
+    <string id="AppName">Zona Potencia 3s</string>
+    <string id="GroupTitle">Potencia objetivo</string>
+    <string id="FtpTitle">FTP (W)</string>
+    <string id="ObjLowTitle">Objetivo mínimo (W)</string>
+    <string id="ObjHighTitle">Objetivo máximo (W)</string>
+</resources>
