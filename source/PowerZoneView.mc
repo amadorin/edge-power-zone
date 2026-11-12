@@ -23,6 +23,8 @@ class PowerZoneView extends WatchUi.DataField {
     private var mHasPower = false;
     private var mPower3 = 0.0f;
     private var mAvgPower = null;
+    private var mLapSum = 0.0f;
+    private var mLapN = 0;
     private var mHr = null;
     private var mCad = null;
     private var mTimerSec = 0;
@@ -131,6 +133,11 @@ class PowerZoneView extends WatchUi.DataField {
         }
     }
 
+    // La media del lap se acumula aqui (Activity.Info no trae potencia media de lap).
+    function onTimerLap() as Void { mLapSum = 0.0f; mLapN = 0; }
+    function onWorkoutStepComplete() as Void { mLapSum = 0.0f; mLapN = 0; }
+    function onTimerReset() as Void { mLapSum = 0.0f; mLapN = 0; }
+
     private function hasObjective() as Boolean {
         return (mObjLow > 0) && (mObjHigh > mObjLow);
     }
@@ -148,6 +155,8 @@ class PowerZoneView extends WatchUi.DataField {
         }
 
         var pv = (info.currentPower != null) ? info.currentPower.toFloat() : 0.0f;
+        mLapSum += pv;
+        mLapN++;
 
         // media 3 s
         mBuf3[mBuf3Idx] = pv;
@@ -369,12 +378,20 @@ class PowerZoneView extends WatchUi.DataField {
         rrect(dc, 22, 20, 196, 56, 18, C_BLUE, null, 0);
         txt(dc, 109, 38, Graphics.FONT_TINY, "POTENCIA 3 S", C_BG, JC);
 
-        // MEDIA arriba a la derecha
-        var avgTxt = (mAvgPower != null) ? mAvgPower.toString() : "--";
+        // MEDIA LAP arriba a la derecha (verde en rango, ambar <=10 W fuera, rojo mas)
+        var lapAvg = (mLapN > 0) ? (mLapSum / mLapN + 0.5f).toNumber() : -1;
+        var avgTxt = (lapAvg >= 0) ? lapAvg.toString() : "--";
+        var avgCol = C_WHITE;
+        if (lapAvg >= 0 && hasObj) {
+            var d = 0;
+            if (lapAvg < mObjLow) { d = mObjLow - lapAvg; }
+            else if (lapAvg > mObjHigh) { d = lapAvg - mObjHigh; }
+            avgCol = (d == 0) ? C_GREEN : ((d <= 10) ? C_AMBER : C_RED);
+        }
         var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
         var avgW = dc.getTextWidthInPixels(avgTxt, Graphics.FONT_NUMBER_MILD) / mSX;
-        txt(dc, 456, 62, Graphics.FONT_XTINY, "MEDIA", C_GREY, JR);
-        txt(dc, 456 - wW - 6 - avgW, 36, Graphics.FONT_NUMBER_MILD, avgTxt, C_WHITE, JL);
+        txt(dc, 456, 62, Graphics.FONT_XTINY, "MEDIA LAP", C_GREY, JR);
+        txt(dc, 456 - wW - 6 - avgW, 36, Graphics.FONT_NUMBER_MILD, avgTxt, avgCol, JL);
         txt(dc, 456 - wW, 42, Graphics.FONT_SMALL, "W", C_GREY, JL);
 
         // potencia 3 s grande

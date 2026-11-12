@@ -29,6 +29,7 @@ Nota: la documentación de Garmin dice que esa llamada lanza excepción en campo
 ### La barra
 
 - La zona objetivo va siempre centrada, con el mismo margen en vatios a cada lado. Las etiquetas de los extremos son "-X W" y "+X W" respecto al rango.
+- Arriba a la derecha: MEDIA LAP (media del lap actual, acumulada en el campo y reiniciada en cada lap/paso), con el mismo color de semáforo.
 - Semáforo con la potencia de 3 s: verde dentro del rango, ámbar hasta 10 W fuera, rojo a más de 10 W fuera (aguja y pastilla).
 
 ### Cambiar el objetivo manual y el FTP
