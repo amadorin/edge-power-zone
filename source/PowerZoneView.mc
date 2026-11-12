@@ -513,15 +513,14 @@ class PowerZoneView extends WatchUi.DataField {
             dc.fillCircle(px(prevX), py(prevY), pw(6) > 3 ? pw(6) : 3);
         }
 
-        // ---------- NP / TSS / CADENCIA ----------
-        tile(dc, 8, 672, 158, 792, C_BLUE, "NP");
+        // ---------- IF (NP total / FTP) / TSS / CADENCIA ----------
+        tile(dc, 8, 672, 158, 792, C_BLUE, "IF");
         tile(dc, 165, 672, 315, 792, C_AMBER, "TSS");
         tile(dc, 322, 672, 472, 792, C_GREEN, "CADENCIA");
         iconBolt(dc, 28, 696, C_BLUE);
         iconGauge(dc, 190, 712, C_AMBER);
         iconCrank(dc, 346, 708, C_GREEN);
-        txt(dc, 26, 748, Graphics.FONT_NUMBER_MILD, mHasPower ? mNp.format("%.0f") : "--", C_WHITE, JL);
-        txt(dc, 146, 774, Graphics.FONT_XTINY, "W", C_GREY, JR);
+        txt(dc, 26, 748, Graphics.FONT_NUMBER_MILD, (mHasPower && mFtp > 0 && mNp > 0.0f) ? (mNp / mFtp).format("%.2f") : "--", C_WHITE, JL);
         txt(dc, 182, 748, Graphics.FONT_NUMBER_MILD, mHasPower ? mTss.format("%.1f") : "--", C_WHITE, JL);
         txt(dc, 340, 748, Graphics.FONT_NUMBER_MILD, (mCad != null) ? mCad.toString() : "--", C_WHITE, JL);
         txt(dc, 460, 774, Graphics.FONT_XTINY, "rpm", C_GREY, JR);

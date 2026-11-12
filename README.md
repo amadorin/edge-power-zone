@@ -1,6 +1,6 @@
 # Zona Potencia 3s (Edge 1050 y 1060)
 
-Campo de datos Connect IQ para Garmin Edge 1050 (y 1060): potencia de 3 segundos a lo grande, con barra dinámica de zona objetivo, gráfico de los últimos 40 segundos, FC, tiempo, media, NP, TSS y cadencia.
+Campo de datos Connect IQ para Garmin Edge 1050 (y 1060): potencia de 3 segundos a lo grande, con barra dinámica de zona objetivo, gráfico de los últimos 40 segundos, FC, tiempo, media, IF, TSS y cadencia.
 
 ![maqueta tiles](docs/maqueta-tiles.png)
 
@@ -15,8 +15,8 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 - **Pastilla de estado**: EN ZONA (verde) / POR DEBAJO -X W (ámbar) / POR ENCIMA +X W (rojo).
 - **Barra de potencia con zoom dinámico**: la escala se centra en el objetivo de modo que la zona ocupa ~45% de la barra; los extremos se redondean a 5 W y la escala se ensancha si la potencia sale del rango. Aguja blanca dentro de la zona, ámbar por debajo, roja por encima.
 - **ÚLTIMOS 40 S**: gráfico de línea de la potencia 3 s con la banda del objetivo; el tramo que supera el objetivo se pinta en ámbar.
-- **NP**: potencia normalizada calculada en vivo (media móvil de 30 s, media de la cuarta potencia).
-- **TSS**: estimado en vivo a partir de la NP y el FTP configurado (430 W por defecto). Es una estimación: el Edge calcula su propio TSS al guardar la actividad y puede diferir.
+- **IF**: factor de intensidad de toda la actividad hasta ahora = NP / FTP. La NP se calcula en vivo en el campo (media móvil de 30 s, media de la cuarta potencia); Garmin no expone NP ni IF en Activity.Info.
+- **TSS**: estimado en vivo a partir de la IF y el FTP configurado (430 W por defecto). Es una estimación: el Edge calcula su propio TSS al guardar la actividad y puede diferir.
 - **CADENCIA**.
 
 ## De dónde sale el objetivo
