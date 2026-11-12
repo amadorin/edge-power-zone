@@ -57,24 +57,25 @@ class PowerZoneView extends WatchUi.DataField {
     private var mSY = 1.0f;
 
     // Colores
-    private const C_BG     = 0x0B0E14;
-    private const C_PANEL  = 0x12161F;
-    private const C_TRACK  = 0x1B2230;
-    private const C_LINE   = 0x2A3140;
-    private const C_GREY   = 0x8A93A5;
-    private const C_WHITE  = 0xFFFFFF;
-    private const C_RED    = 0xFF3B30;
-    private const C_GREEN  = 0x2BD97C;
-    private const C_ZONEF  = 0x14532D;
-    private const C_AMBER  = 0xFFB020;
+    private var C_OBJT  = 0xFFE1C8;
+    private var C_BG     = 0x0B0E14;
+    private var C_PANEL  = 0x12161F;
+    private var C_TRACK  = 0x1B2230;
+    private var C_LINE   = 0x2A3140;
+    private var C_GREY   = 0x8A93A5;
+    private var C_WHITE  = 0xFFFFFF;
+    private var C_RED    = 0xFF3B30;
+    private var C_GREEN  = 0x2BD97C;
+    private var C_ZONEF  = 0x14532D;
+    private var C_AMBER  = 0xFFB020;
 
-    private const C_BLUE   = 0x3D82F6;
-    private const C_PURP   = 0xB062F6;
-    private const C_ORG    = 0xFF781E;
-    private const C_CARD   = 0x151A24;
-    private const C_BORD   = 0x2D3544;
-    private const C_HEROBG = 0x1E100A;
-    private const C_HRRED  = 0xEB4034;
+    private var C_BLUE   = 0x3D82F6;
+    private var C_PURP   = 0xB062F6;
+    private var C_ORG    = 0xFF781E;
+    private var C_CARD   = 0x151A24;
+    private var C_BORD   = 0x2D3544;
+    private var C_HEROBG = 0x1E100A;
+    private var C_HRRED  = 0xEB4034;
 
     private const ZONE_FRAC = 0.45f; // la zona ocupa ~45% de la barra
 
@@ -346,7 +347,27 @@ class PowerZoneView extends WatchUi.DataField {
         dc.fillCircle(px(cx + 13), py(cy + 17), pw(5));
     }
 
+    // Tema claro/oscuro segun el fondo que el Edge da al campo de datos
+    // (DataField.getBackgroundColor(): blanco = modo claro, negro = modo oscuro).
+    private function applyTheme() as Void {
+        var light = (getBackgroundColor() != Graphics.COLOR_BLACK);
+        if (light) {
+            C_BG = 0xFFFFFF; C_PANEL = 0xF2F4F8; C_TRACK = 0xDDE2EA; C_LINE = 0xC5CCD8;
+            C_GREY = 0x566074; C_WHITE = 0x0B0E14; C_RED = 0xD92D20; C_GREEN = 0x12994F;
+            C_ZONEF = 0xBFEBD2; C_AMBER = 0xE08A00; C_BLUE = 0x2563EB; C_PURP = 0x8E3FD6;
+            C_ORG = 0xE05A00; C_CARD = 0xF4F6FA; C_BORD = 0xC5CCD8; C_HEROBG = 0xFFF1E6;
+            C_HRRED = 0xD93025; C_OBJT = 0xB34700;
+        } else {
+            C_BG = 0x0B0E14; C_PANEL = 0x12161F; C_TRACK = 0x1B2230; C_LINE = 0x2A3140;
+            C_GREY = 0x8A93A5; C_WHITE = 0xFFFFFF; C_RED = 0xFF3B30; C_GREEN = 0x2BD97C;
+            C_ZONEF = 0x14532D; C_AMBER = 0xFFB020; C_BLUE = 0x3D82F6; C_PURP = 0xB062F6;
+            C_ORG = 0xFF781E; C_CARD = 0x151A24; C_BORD = 0x2D3544; C_HEROBG = 0x1E100A;
+            C_HRRED = 0xEB4034; C_OBJT = 0xFFE1C8;
+        }
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
+        applyTheme();
         mSX = dc.getWidth() / 480.0f;
         mSY = dc.getHeight() / 800.0f;
 
@@ -376,7 +397,7 @@ class PowerZoneView extends WatchUi.DataField {
         // ---------- tarjeta principal (hero) ----------
         rrect(dc, 8, 8, 472, 388, 14, C_HEROBG, C_ORG, 3);
         rrect(dc, 22, 20, 196, 56, 18, C_BLUE, null, 0);
-        txt(dc, 109, 38, Graphics.FONT_TINY, "POTENCIA 3 S", C_BG, JC);
+        txt(dc, 109, 38, Graphics.FONT_TINY, "POTENCIA 3 S", 0x0B0E14, JC);
 
         // MEDIA LAP arriba a la derecha (verde en rango, ambar <=10 W fuera, rojo mas)
         var lapAvg = (mLapN > 0) ? (mLapSum / mLapN + 0.5f).toNumber() : -1;
@@ -403,10 +424,10 @@ class PowerZoneView extends WatchUi.DataField {
         // pastilla de estado + objetivo
         var pillTxt;
         var pillBg;
-        var pillFg = C_BG;
+        var pillFg = 0x0B0E14;
         if (state == 1)      { pillTxt = "EN ZONA"; pillBg = C_GREEN; }
-        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = needleColor; if (diff > 10) { pillFg = C_WHITE; } }
-        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = needleColor; if (diff <= 10) { pillFg = C_BG; } else { pillFg = C_WHITE; } }
+        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = needleColor; if (diff > 10) { pillFg = 0xFFFFFF; } }
+        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = needleColor; if (diff <= 10) { pillFg = 0x0B0E14; } else { pillFg = 0xFFFFFF; } }
         else                 { pillTxt = "SIN OBJETIVO"; pillBg = C_LINE; pillFg = C_GREY; }
         var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_SMALL) + pw(28);
         var pillX = 456 * mSX - pillW;
@@ -417,7 +438,7 @@ class PowerZoneView extends WatchUi.DataField {
         if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", needleColor, JR); }
         else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", needleColor, JR); }
         if (hasObj) {
-            txt(dc, 456, 190, Graphics.FONT_XTINY, (mFromWorkout ? "PASO " : "OBJ ") + mObjLow + "-" + mObjHigh + " W", 0xFFE1C8, JR);
+            txt(dc, 456, 190, Graphics.FONT_XTINY, (mFromWorkout ? "PASO " : "OBJ ") + mObjLow + "-" + mObjHigh + " W", C_OBJT, JR);
         }
 
         // barra de potencia con zoom dinamico

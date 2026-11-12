@@ -26,6 +26,10 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 
 Nota: la documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch` y, si falla, usa el objetivo manual. **Sin probar aún en el Edge real.**
 
+### Tema claro / oscuro
+
+El campo sigue el modo del Edge: lee `getBackgroundColor()` del campo de datos (negro = oscuro, cualquier otro = claro) y cambia la paleta en cada redibujado. En claro, los verdes/ámbar/rojos son más oscuros para mantener el contraste.
+
 ### La barra
 
 - La zona objetivo va siempre centrada, con el mismo margen en vatios a cada lado. Las etiquetas de los extremos son "-X W" y "+X W" respecto al rango.
