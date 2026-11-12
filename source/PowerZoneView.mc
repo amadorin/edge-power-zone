@@ -29,6 +29,10 @@ class PowerZoneView extends WatchUi.DataField {
     private var mBanner = "";
     private var mBannerKind = 0; // 1 aprieta, 2 afloja, 3 igual/ultimo
     private var mBannerFrame = 0;
+    private var mNextName = "";
+    private var mNextDur = 0;
+    private var mNextRem = 0;
+    private var mHero = 0; // 0 potencia, 1 velocidad, 2 FC
     // media del paso (para el aviso de fin de paso)
     private var mStepSum = 0.0f;
     private var mStepN = 0;
@@ -135,11 +139,14 @@ class PowerZoneView extends WatchUi.DataField {
         mNextKind = 0;
         mNextLow = 0;
         mNextHigh = 0;
+        mNextName = "";
+        mNextDur = 0;
         if (!mFromWorkout) { return; }
         try {
             if (!(Activity has :getNextWorkoutStep)) { return; }
             var nx = Activity.getNextWorkoutStep();
             if (nx == null) { return; }
+            if (nx.name != null) { mNextName = nx.name; }
             var st = nx.step;
             if (st has :activeStep) {
                 var rest = (nx.intensity == Activity.WORKOUT_INTENSITY_REST)
@@ -147,6 +154,11 @@ class PowerZoneView extends WatchUi.DataField {
                 st = rest ? st.restStep : st.activeStep;
             }
             mNextKind = 2;
+            if (st.durationType == Activity.WORKOUT_STEP_DURATION_TIME && st.durationValue != null) {
+                var dv = st.durationValue;
+                if (dv >= 10000) { dv = dv / 1000; }
+                mNextDur = dv;
+            }
             var tt = st.targetType;
             var isPower = (tt == Activity.WORKOUT_STEP_TARGET_POWER)
                 || (tt == Activity.WORKOUT_STEP_TARGET_POWER_3S)
@@ -170,27 +182,17 @@ class PowerZoneView extends WatchUi.DataField {
         var total = mStepDurVal;
         if (total >= 10000) { total = total / 1000; }
         var rem = total - (mTimerSec - mStepStartSec);
-        if (rem > 5 || rem < 1 || total < 8) { return; }
-        mBannerFrame = 5 - rem; // 0..4
+        if (rem > 8 || rem < 1 || total < 12) { return; }
+        mNextRem = rem;
+        mBanner = "x";
         var cur = (mObjLow + mObjHigh) / 2;
         if (mNextKind == 0) {
-            mBanner = "Último esfuerzo, aprieta y terminamos";
             mBannerKind = 3;
         } else if (mNextKind == 2) {
-            mBanner = "Se acaba la serie, ahora toca aflojar";
             mBannerKind = 2;
         } else {
             var nxt = (mNextLow + mNextHigh) / 2;
-            if (nxt * 100 > cur * 105) {
-                mBanner = "Prepárate, el siguiente aprieta más: " + nxt + " W";
-                mBannerKind = 1;
-            } else if (nxt * 100 < cur * 95) {
-                mBanner = "El siguiente es más tranquilo, a " + nxt + " W";
-                mBannerKind = 2;
-            } else {
-                mBanner = "Mismo ritmo en el siguiente: " + nxt + " W";
-                mBannerKind = 3;
-            }
+            mBannerKind = (nxt * 100 > cur * 105) ? 1 : ((nxt * 100 < cur * 95) ? 2 : 3);
         }
     }
 
@@ -232,6 +234,11 @@ class PowerZoneView extends WatchUi.DataField {
     }
 
     // La media del lap se acumula aqui (Activity.Info no trae potencia media de lap).
+    function setHero(i as Number) as Void {
+        mHero = i;
+        WatchUi.requestUpdate();
+    }
+
     function turnPage(d as Number) as Void {
         mPage = (mPage + d + 2) % 2;
         WatchUi.requestUpdate();
@@ -543,8 +550,18 @@ class PowerZoneView extends WatchUi.DataField {
 
         // ---------- tarjeta principal (hero) ----------
         rrect(dc, 8, 8, 472, 388, 14, C_HEROBG, C_ORG, 3);
-        rrect(dc, 22, 20, 196, 56, 18, C_BLUE, null, 0);
-        txt(dc, 109, 38, Graphics.FONT_TINY, "POTENCIA 3 S", 0x0B0E14, JC);
+        var tabX = [22, 160, 280];
+        var tabW = [132, 112, 70];
+        var tabL = ["POTENCIA", "VELOC", "FC"];
+        for (var ti = 0; ti < 3; ti++) {
+            if (ti == mHero) {
+                rrect(dc, tabX[ti], 20, tabX[ti] + tabW[ti], 56, 18, C_BLUE, null, 0);
+                txt(dc, tabX[ti] + tabW[ti] / 2, 38, Graphics.FONT_XTINY, tabL[ti], 0x0B0E14, JC);
+            } else {
+                rrect(dc, tabX[ti], 20, tabX[ti] + tabW[ti], 56, 18, C_CARD, C_BORD, 2);
+                txt(dc, tabX[ti] + tabW[ti] / 2, 38, Graphics.FONT_XTINY, tabL[ti], C_GREY, JC);
+            }
+        }
 
         // MEDIA LAP arriba a la derecha (verde en rango, ambar <=10 W fuera, rojo mas)
         var lapAvg = (mLapN > 0) ? (mLapSum / mLapN + 0.5f).toNumber() : -1;
@@ -559,9 +576,12 @@ class PowerZoneView extends WatchUi.DataField {
 
         // potencia 3 s grande
         var bigTxt = p3.toString();
+        var bigUnit = "W";
+        if (mHero == 1) { bigTxt = (mSpeed != null) ? (mSpeed * 3.6f).format("%.1f") : "--"; bigUnit = "km/h"; }
+        else if (mHero == 2) { bigTxt = (mHr != null) ? mHr.toString() : "--"; bigUnit = "ppm"; }
         txt(dc, 26, 142, Graphics.FONT_NUMBER_THAI_HOT, bigTxt, C_WHITE, JL);
         var bigW = dc.getTextWidthInPixels(bigTxt, Graphics.FONT_NUMBER_THAI_HOT) / mSX;
-        txt(dc, 26 + bigW + 6, 196, Graphics.FONT_MEDIUM, "W", C_GREY, JL);
+        txt(dc, 26 + bigW + 6, 196, Graphics.FONT_MEDIUM, bigUnit, C_GREY, JL);
 
         // MEDIA LAP grande a la derecha (donde estaba la pastilla)
         var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
@@ -677,23 +697,29 @@ class PowerZoneView extends WatchUi.DataField {
             dc.fillCircle(px(prevX), py(prevY), pw(6) > 3 ? pw(6) : 3);
         }
 
-        // ---------- aviso del siguiente paso (ultimos 5 s) ----------
+        // ---------- tarjeta del siguiente paso (ultimos 8 s) ----------
         if (mBanner.length() > 0) {
             var bc = (mBannerKind == 1) ? C_RED : ((mBannerKind == 2) ? C_BLUE : C_PURP);
-            rrect(dc, 8, 672, 472, 792, 12, bc, null, 0);
-            var f = Graphics.FONT_SMALL;
-            var tw = dc.getTextWidthInPixels(mBanner, f);
-            var vw = pw(430);
-            var ox = 0;
-            if (tw > vw) {
-                // marquee: el Edge redibuja ~1 vez por segundo, asi que avanza a saltos
-                // y en el ultimo cuadro ya se ve el final del texto
-                ox = ((tw - vw) * mBannerFrame / 4).toNumber();
-            }
-            dc.setClip(px(20), py(680), vw, ph(104));
-            dc.setColor(0xFFFFFF, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(px(24) - ox, py(732), f, mBanner, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            rrect(dc, 8, 664, 472, 792, 14, 0xFFFFFF, bc, 4);
+            var ttl = "SIGUIENTE";
+            if (mNextKind == 0) { ttl = "ULTIMO ESFUERZO"; }
+            else if (mNextName.length() > 0) { ttl = "SIGUIENTE · " + mNextName.toUpper(); }
+            dc.setClip(px(22), py(672), pw(300), ph(40));
+            txt(dc, 24, 690, Graphics.FONT_XTINY, ttl, 0x0B0E14, JL);
             dc.clearClip();
+            if (mNextDur > 0) { txt(dc, 456, 690, Graphics.FONT_XTINY, fmtHMS(mNextDur), 0x0B0E14, JR); }
+            var wt = "--";
+            if (mNextKind == 1) { wt = mNextLow + "-" + mNextHigh; }
+            else if (mNextKind == 2) { wt = "LIBRE"; }
+            else { wt = "FIN"; }
+            txt(dc, 24, 748, Graphics.FONT_NUMBER_MILD, wt, 0x0B0E14, JL);
+            if (mNextKind == 1) {
+                var ww = dc.getTextWidthInPixels(wt, Graphics.FONT_NUMBER_MILD) / mSX;
+                txt(dc, 24 + ww + 6, 756, Graphics.FONT_SMALL, "W", C_GREY, JL);
+            }
+            txt(dc, 456, 748, Graphics.FONT_NUMBER_MILD, mNextRem.toString(), bc, JR);
+            var rw = dc.getTextWidthInPixels(mNextRem.toString(), Graphics.FONT_NUMBER_MILD) / mSX;
+            txt(dc, 456 - rw - 8, 756, Graphics.FONT_XTINY, "EN", 0x0B0E14, JR);
             return;
         }
 

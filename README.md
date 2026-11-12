@@ -37,7 +37,7 @@ Al acabar un paso con objetivo de potencia (mínimo 10 s de datos), el campo cal
 
 ### Aviso del siguiente paso
 
-En los últimos 5 s de un paso por tiempo con objetivo de potencia, el campo tapa la fila inferior (IF/TSS/cadencia) con un rótulo de color que anuncia el siguiente paso, leído con `Activity.getNextWorkoutStep()` (API 3.2.0): "Prepárate, el siguiente aprieta más: 450 W" (rojo), "El siguiente es más tranquilo, a 200 W" (azul), "Mismo ritmo en el siguiente: X W", o "Último esfuerzo, aprieta y terminamos" si no hay más pasos. Si el texto no cabe se desplaza a saltos (el Edge redibuja ~1 vez por segundo) y en el último cuadro ya se lee el final. Pasos de menos de 8 s no lo muestran.
+En los últimos 8 s de un paso por tiempo (de 12 s o más) con objetivo de potencia, el campo tapa la fila inferior con una tarjeta del siguiente paso, leído con `Activity.getNextWorkoutStep()` (API 3.2.0): nombre, duración, vatios del siguiente paso y cuenta atrás "EN 7". Borde rojo si el siguiente aprieta más, azul si afloja, morado si es igual; "ULTIMO ESFUERZO" si no hay más pasos.
 
 ### Tema claro / oscuro
 
@@ -120,3 +120,7 @@ releases/edge-power-zone-edge1060.prg  # diseño tiles, Edge 1060
 ## Páginas de la fila inferior (toque)
 
 La fila inferior tiene 2 páginas: IF / TSS / cadencia y velocidad / distancia / desnivel. Toca la mitad izquierda o derecha de esa fila para cambiar de página (puntos indicadores debajo). Un toque en cualquier otro sitio sigue abriendo el menú nativo del Edge. Requiere que el campo esté solo en la pantalla de datos (campo a pantalla completa). Probado solo en simulador de compilación; pendiente de confirmar en el Edge.
+
+## Pestañas arriba (toque)
+
+POTENCIA / VELOC / FC en la parte superior: toca una pestaña para cambiar el número grande (la barra de zona y la media lap siguen siendo de potencia). Un toque en la franja superior solo cambia de pestaña; cualquier otro toque fuera de la fila inferior se devuelve al Edge.
