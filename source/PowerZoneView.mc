@@ -411,12 +411,12 @@ class PowerZoneView extends WatchUi.DataField {
         }
         var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
         var avgW = dc.getTextWidthInPixels(avgTxt, Graphics.FONT_NUMBER_MILD) / mSX;
-        txt(dc, 456, 62, Graphics.FONT_XTINY, "MEDIA LAP", C_GREY, JR);
-        txt(dc, 456 - wW - 6 - avgW, 36, Graphics.FONT_NUMBER_MILD, avgTxt, avgCol, JL);
-        txt(dc, 456 - wW, 42, Graphics.FONT_SMALL, "W", C_GREY, JL);
+        txt(dc, 456, 74, Graphics.FONT_XTINY, "MEDIA LAP", C_GREY, JR);
+        txt(dc, 456 - wW - 6 - avgW, 30, Graphics.FONT_NUMBER_MILD, avgTxt, avgCol, JL);
+        txt(dc, 456 - wW, 36, Graphics.FONT_SMALL, "W", C_GREY, JL);
 
         // potencia 3 s grande
-        var bigTxt = mHasPower ? p3.toString() : "--";
+        var bigTxt = p3.toString();
         txt(dc, 26, 142, Graphics.FONT_NUMBER_THAI_HOT, bigTxt, C_WHITE, JL);
         var bigW = dc.getTextWidthInPixels(bigTxt, Graphics.FONT_NUMBER_THAI_HOT) / mSX;
         txt(dc, 26 + bigW + 6, 196, Graphics.FONT_MEDIUM, "W", C_GREY, JL);
@@ -428,6 +428,7 @@ class PowerZoneView extends WatchUi.DataField {
         if (state == 1)      { pillTxt = "EN ZONA"; pillBg = C_GREEN; }
         else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = needleColor; if (diff > 10) { pillFg = 0xFFFFFF; } }
         else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = needleColor; if (diff <= 10) { pillFg = 0x0B0E14; } else { pillFg = 0xFFFFFF; } }
+        else if (hasObj)     { pillTxt = "PEDALEA"; pillBg = C_LINE; pillFg = C_GREY; }
         else                 { pillTxt = "SIN OBJETIVO"; pillBg = C_LINE; pillFg = C_GREY; }
         var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_SMALL) + pw(28);
         var pillX = 456 * mSX - pillW;
