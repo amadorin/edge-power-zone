@@ -4,7 +4,7 @@ Campo de datos Connect IQ para Garmin Edge 1050 (y 1060): potencia de 3 segundos
 
 ![maqueta tiles](docs/maqueta-tiles.png)
 
-Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no se ve bien en tu Edge, hay un diseño simple de respaldo (`releases/edge-power-zone-edge1050-simple.prg`, maqueta antigua en `docs/maqueta.png`).
+Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no se ve bien en tu Edge, hay un diseño simple de respaldo (`releases/training-1050-screen-edge1050-simple.prg`, maqueta antigua en `docs/maqueta.png`).
 
 ## Qué muestra
 
@@ -52,8 +52,8 @@ El campo sigue el modo del Edge: lee `getBackgroundColor()` del campo de datos (
 ## Instalación rápida (2 minutos, sin compilar)
 
 1. Elige tu archivo en la carpeta [`releases/`](releases/):
-   - **Edge 1050**: `edge-power-zone-edge1050.prg`
-   - **Edge 1060**: `edge-power-zone-edge1060.prg`
+   - **Edge 1050**: `training-1050-screen-edge1050.prg`
+   - **Edge 1060**: `training-1050-screen-edge1060.prg`
    - Si algo no se ve bien en tu Edge, prueba el diseño simple: el mismo nombre acabado en `-simple.prg`.
 2. Descárgalo desde GitHub (abre el archivo y pulsa el icono de descarga, o "Download raw file").
 3. Conecta el Edge al ordenador por USB y copia el `.prg` a la carpeta `GARMIN/Apps` del Edge.
@@ -88,7 +88,7 @@ Guarda `developer_key.der`: firmar con otra clave crea una app distinta y el Edg
 
 ```bash
 export SDK=~/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.3.0-<id>   # tu ruta del SDK
-$SDK/bin/monkeyc -f monkey.jungle -d edge1050 -y developer_key.der -o releases/edge-power-zone-edge1050.prg -w
+$SDK/bin/monkeyc -f monkey.jungle -d edge1050 -y developer_key.der -o releases/training-1050-screen-edge1050.prg -w
 ```
 
 En macOS/Windows el SDK vive en `~/Library/Application Support/Garmin/ConnectIQ/Sdks/...` (macOS) o `%APPDATA%\Garmin\ConnectIQ\Sdks\...` (Windows), y `monkeyc` está en la carpeta `bin` del SDK.
@@ -97,7 +97,7 @@ En macOS/Windows el SDK vive en `~/Library/Application Support/Garmin/ConnectIQ/
 
 ```bash
 $SDK/bin/connectiq &          # abre el simulador
-$SDK/bin/monkeydo releases/edge-power-zone-edge1050.prg edge1050
+$SDK/bin/monkeydo releases/training-1050-screen-edge1050.prg edge1050
 ```
 
 En el simulador: menú **Simulation → FIT Data** o los valores simulados para alimentar potencia/FC/cadencia.
@@ -110,10 +110,10 @@ monkey.jungle
 source/PowerZoneApp.mc        # entrada de la app
 source/PowerZoneView.mc       # toda la lógica y el dibujo
 resources/                    # textos (español), ajustes (FTP), icono
-releases/edge-power-zone-edge1050.prg  # diseño tiles, Edge 1050
-releases/edge-power-zone-edge1050-simple.prg  # diseño simple anterior (respaldo)
-releases/edge-power-zone-edge1060-simple.prg  # idem, Edge 1060
-releases/edge-power-zone-edge1060.prg  # diseño tiles, Edge 1060
+releases/training-1050-screen-edge1050.prg  # diseño tiles, Edge 1050
+releases/training-1050-screen-edge1050-simple.prg  # diseño simple anterior (respaldo)
+releases/training-1050-screen-edge1060-simple.prg  # idem, Edge 1060
+releases/training-1050-screen-edge1060.prg  # diseño tiles, Edge 1060
 ```
 
 
