@@ -17,3 +17,4 @@ class PowerZoneApp extends Application.AppBase {
     }
 
 }
+

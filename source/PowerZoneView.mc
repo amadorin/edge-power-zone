@@ -5,7 +5,7 @@ import Toybox.Lang;
 import Toybox.Math;
 import Toybox.WatchUi;
 
-// Campo de datos para Edge 1060 (480x800): potencia 3 s con zona objetivo.
+// Campo de datos para Edge 1050 y 1060 (480x800): potencia 3 s con zona objetivo.
 // OJO: una data field NO puede leer el paso de entrenamiento activo
 // (Activity.getCurrentWorkoutStep() lanza OperationNotAllowedException en
 // data fields). El objetivo se fija en los ajustes de la app
@@ -64,6 +64,14 @@ class PowerZoneView extends WatchUi.DataField {
     private const C_GREEN  = 0x2BD97C;
     private const C_ZONEF  = 0x14532D;
     private const C_AMBER  = 0xFFB020;
+
+    private const C_BLUE   = 0x3D82F6;
+    private const C_PURP   = 0xB062F6;
+    private const C_ORG    = 0xFF781E;
+    private const C_CARD   = 0x151A24;
+    private const C_BORD   = 0x2D3544;
+    private const C_HEROBG = 0x1E100A;
+    private const C_HRRED  = 0xEB4034;
 
     private const ZONE_FRAC = 0.45f; // la zona ocupa ~45% de la barra
 
@@ -222,6 +230,75 @@ class PowerZoneView extends WatchUi.DataField {
         return Lang.format("$1$:$2$", [m, s.format("%02d")]);
     }
 
+
+    // ---- primitivas de la version tiles ----
+
+    private function fitFont(dc, s, availW, fonts) {
+        for (var i = 0; i < fonts.size(); i++) {
+            if (dc.getTextWidthInPixels(s, fonts[i]) <= availW) { return fonts[i]; }
+        }
+        return fonts[fonts.size() - 1];
+    }
+
+    private function rrect(dc, x0, y0, x1, y1, r, fill, line, lw) {
+        if (fill != null) {
+            dc.setColor(fill, C_BG);
+            dc.fillRoundedRectangle(px(x0), py(y0), pw(x1 - x0), ph(y1 - y0), ph(r));
+        }
+        if (line != null) {
+            dc.setColor(line, C_BG);
+            dc.setPenWidth(pw(lw) > 1 ? pw(lw) : 1);
+            dc.drawRoundedRectangle(px(x0), py(y0), pw(x1 - x0), ph(y1 - y0), ph(r));
+            dc.setPenWidth(1);
+        }
+    }
+
+    private function tile(dc, x0, y0, x1, y1, acc, label) {
+        rrect(dc, x0, y0, x1, y1, 12, C_CARD, C_BORD, 2);
+        rrect(dc, x0, y0 + 7, x0 + 7, y1 - 7, 3, acc, null, 0);
+        txt(dc, x1 - 12, y0 + 20, Graphics.FONT_XTINY, label, C_GREY, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
+    private function iconHeart(dc, cx, cy, col) {
+        dc.setColor(col, C_BG);
+        dc.fillCircle(px(cx - 9), py(cy - 6), pw(10));
+        dc.fillCircle(px(cx + 9), py(cy - 6), pw(10));
+        dc.fillPolygon([[px(cx - 19), py(cy - 3)], [px(cx + 19), py(cy - 3)], [px(cx), py(cy + 22)]]);
+    }
+
+    private function iconTimer(dc, cx, cy, col) {
+        dc.setColor(col, C_BG);
+        dc.setPenWidth(pw(4) > 2 ? pw(4) : 2);
+        dc.drawCircle(px(cx), py(cy), pw(18));
+        dc.drawLine(px(cx), py(cy), px(cx), py(cy - 11));
+        dc.drawLine(px(cx), py(cy), px(cx + 8), py(cy + 4));
+        dc.setPenWidth(1);
+        dc.fillRectangle(px(cx - 6), py(cy - 30), pw(12), ph(6));
+    }
+
+    private function iconBolt(dc, x, y, col) {
+        dc.setColor(col, C_BG);
+        dc.fillPolygon([[px(x + 14), py(y)], [px(x + 2), py(y + 20)], [px(x + 9), py(y + 20)],
+                        [px(x + 4), py(y + 38)], [px(x + 20), py(y + 14)], [px(x + 12), py(y + 14)]]);
+    }
+
+    private function iconGauge(dc, cx, cy, col) {
+        dc.setColor(col, C_BG);
+        dc.setPenWidth(pw(4) > 2 ? pw(4) : 2);
+        dc.drawArc(px(cx), py(cy), pw(16), Graphics.ARC_COUNTER_CLOCKWISE, 0, 180);
+        dc.drawLine(px(cx), py(cy), px(cx + 10), py(cy - 9));
+        dc.setPenWidth(1);
+    }
+
+    private function iconCrank(dc, cx, cy, col) {
+        dc.setColor(col, C_BG);
+        dc.setPenWidth(pw(4) > 2 ? pw(4) : 2);
+        dc.drawCircle(px(cx), py(cy), pw(13));
+        dc.drawLine(px(cx), py(cy), px(cx + 12), py(cy + 16));
+        dc.setPenWidth(1);
+        dc.fillCircle(px(cx + 13), py(cy + 17), pw(5));
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         mSX = dc.getWidth() / 480.0f;
         mSY = dc.getHeight() / 800.0f;
@@ -232,7 +309,7 @@ class PowerZoneView extends WatchUi.DataField {
         var hasObj = hasObjective();
         var p3 = mPower3.toNumber();
 
-        // estado de zona (aguja + pastilla)
+        // estado de zona (aguja + pastilla), siempre con la media de 3 s
         var state = 0; // 0 sin objetivo, 1 en zona, 2 debajo, 3 encima
         var diff = 0;
         if (hasObj && mHasPower) {
@@ -248,96 +325,92 @@ class PowerZoneView extends WatchUi.DataField {
         var JL = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
         var JR = Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER;
 
-        // ---------- fila superior: FC + TIEMPO ----------
-        txt(dc, 30, 44, Graphics.FONT_TINY, "FC", C_GREY, JL);
-        txt(dc, 450, 44, Graphics.FONT_TINY, "TIEMPO", C_GREY, JR);
-        var hrTxt = (mHr != null) ? mHr.toString() : "--";
-        txt(dc, 30, 92, Graphics.FONT_NUMBER_MEDIUM, hrTxt, C_RED, JL);
-        var hrW = dc.getTextWidthInPixels(hrTxt, Graphics.FONT_NUMBER_MEDIUM) / mSX;
-        txt(dc, 30 + hrW + 8, 106, Graphics.FONT_XTINY, "ppm", C_GREY, JL);
-        txt(dc, 450, 92, Graphics.FONT_NUMBER_MEDIUM, fmtHMS(mTimerSec), C_WHITE, JR);
+        // ---------- tarjeta principal (hero) ----------
+        rrect(dc, 8, 8, 472, 388, 14, C_HEROBG, C_ORG, 3);
+        rrect(dc, 22, 20, 196, 56, 18, C_BLUE, null, 0);
+        txt(dc, 109, 38, Graphics.FONT_TINY, "POTENCIA 3 S", C_BG, JC);
 
-        // ---------- POT 3S grande + MEDIA ----------
-        txt(dc, 30, 152, Graphics.FONT_TINY, "POT 3S", C_GREY, JL);
-        var bigTxt = mHasPower ? p3.toString() : "--";
-        txt(dc, 30, 232, Graphics.FONT_NUMBER_THAI_HOT, bigTxt, C_WHITE, JL);
-        var bigW = dc.getTextWidthInPixels(bigTxt, Graphics.FONT_NUMBER_THAI_HOT) / mSX;
-        txt(dc, 30 + bigW + 10, 258, Graphics.FONT_MEDIUM, "W", C_GREY, JL);
-
-        txt(dc, 450, 176, Graphics.FONT_TINY, "MEDIA", C_GREY, JR);
+        // MEDIA arriba a la derecha
         var avgTxt = (mAvgPower != null) ? mAvgPower.toString() : "--";
-        var avgW = dc.getTextWidthInPixels(avgTxt, Graphics.FONT_NUMBER_MILD) / mSX;
         var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
-        var total = avgW + 6 + wW;
-        txt(dc, 450 - total, 222, Graphics.FONT_NUMBER_MILD, avgTxt, C_WHITE, JL);
-        txt(dc, 450 - wW, 230, Graphics.FONT_SMALL, "W", C_GREY, JL);
+        var avgW = dc.getTextWidthInPixels(avgTxt, Graphics.FONT_NUMBER_MILD) / mSX;
+        txt(dc, 456, 62, Graphics.FONT_XTINY, "MEDIA", C_GREY, JR);
+        txt(dc, 456 - wW - 6 - avgW, 36, Graphics.FONT_NUMBER_MILD, avgTxt, C_WHITE, JL);
+        txt(dc, 456 - wW, 42, Graphics.FONT_SMALL, "W", C_GREY, JL);
 
-        // ---------- OBJ + pastilla de estado ----------
+        // potencia 3 s grande
+        var bigTxt = mHasPower ? p3.toString() : "--";
+        txt(dc, 26, 142, Graphics.FONT_NUMBER_THAI_HOT, bigTxt, C_WHITE, JL);
+        var bigW = dc.getTextWidthInPixels(bigTxt, Graphics.FONT_NUMBER_THAI_HOT) / mSX;
+        txt(dc, 26 + bigW + 6, 196, Graphics.FONT_MEDIUM, "W", C_GREY, JL);
+
+        // pastilla de estado + objetivo
         var pillTxt;
         var pillBg;
-        var pillFg = 0x0B0E14;
+        var pillFg = C_BG;
         if (state == 1)      { pillTxt = "EN ZONA"; pillBg = C_GREEN; }
-        else if (state == 2) { pillTxt = "POR DEBAJO -" + diff + " W"; pillBg = C_AMBER; }
-        else if (state == 3) { pillTxt = "POR ENCIMA +" + diff + " W"; pillBg = C_RED; pillFg = C_WHITE; }
+        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = C_AMBER; }
+        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = C_RED; pillFg = C_WHITE; }
         else                 { pillTxt = "SIN OBJETIVO"; pillBg = C_LINE; pillFg = C_GREY; }
-
-        if (hasObj) {
-            txt(dc, 30, 312, Graphics.FONT_SMALL,
-                "OBJ " + mObjLow + "-" + mObjHigh + " W", C_GREEN, JL);
-        }
-        var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_TINY) + pw(28);
-        var pillX = 450 * mSX - pillW;
+        var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_SMALL) + pw(28);
+        var pillX = 456 * mSX - pillW;
         dc.setColor(pillBg, C_BG);
-        dc.fillRoundedRectangle(pillX, py(292), pillW, ph(40), ph(20));
+        dc.fillRoundedRectangle(pillX, py(84), pillW, ph(58), ph(14));
         dc.setColor(pillFg, C_BG);
-        dc.drawText(pillX + pillW / 2, py(312), Graphics.FONT_TINY, pillTxt, JC);
-
-        // ---------- barra de potencia ----------
-        dc.setColor(C_TRACK, C_BG);
-        dc.fillRoundedRectangle(px(30), py(350), pw(420), ph(48), ph(24));
-
+        dc.drawText(pillX + pillW / 2, py(113), Graphics.FONT_SMALL, pillTxt, JC);
+        if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", C_AMBER, JR); }
+        else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", C_RED, JR); }
         if (hasObj) {
-            var zl = px(mapX(mObjLow));
-            var zr = px(mapX(mObjHigh));
-            dc.setColor(C_ZONEF, C_BG);
-            dc.fillRoundedRectangle(zl, py(340), zr - zl, ph(68), ph(8));
-            dc.setPenWidth(pw(3) > 2 ? pw(3) : 2);
-            dc.setColor(C_GREEN, C_BG);
-            dc.drawRoundedRectangle(zl, py(340), zr - zl, ph(68), ph(8));
-            dc.setPenWidth(1);
+            txt(dc, 456, 190, Graphics.FONT_XTINY, "OBJ " + mObjLow + "-" + mObjHigh + " W", 0xFFE1C8, JR);
         }
 
-        // aguja (triangulo + linea) en la potencia 3 s
+        // barra de potencia con zoom dinamico
+        rrect(dc, 30, 272, 450, 318, 23, C_TRACK, null, 0);
+        if (hasObj) {
+            var zl = mapX(mObjLow);
+            var zr = mapX(mObjHigh);
+            rrect(dc, zl, 262, zr, 328, 8, C_ZONEF, C_GREEN, 3);
+        }
         var nx = px(mapX(mPower3));
         dc.setColor(needleColor, C_BG);
-        dc.fillPolygon([
-            [nx, py(338)],
-            [nx - pw(9), py(322)],
-            [nx + pw(9), py(322)]
-        ]);
-        dc.setPenWidth(pw(3) > 2 ? pw(3) : 2);
-        dc.drawLine(nx, py(336), nx, py(402));
+        dc.fillPolygon([[nx, py(266)], [nx - pw(11), py(248)], [nx + pw(11), py(248)]]);
+        dc.setPenWidth(pw(4) > 2 ? pw(4) : 2);
+        dc.drawLine(nx, py(266), nx, py(324));
         dc.setPenWidth(1);
 
-        // etiquetas de escala
-        var mid = (mScaleMin + mScaleMax) / 2;
-        txt(dc, 30, 420, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL);
-        txt(dc, 240, 420, Graphics.FONT_XTINY, mid.toString(), C_GREY, JC);
-        txt(dc, 450, 420, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR);
+        txt(dc, 30, 354, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL);
+        txt(dc, 450, 354, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR);
+        if (hasObj) {
+            txt(dc, mapX(mObjLow), 354, Graphics.FONT_XTINY, mObjLow.toString(), C_GREEN, JC);
+            txt(dc, mapX(mObjHigh), 354, Graphics.FONT_XTINY, mObjHigh.toString(), C_GREEN, JC);
+        }
+
+        // ---------- FC + TIEMPO ----------
+        tile(dc, 8, 396, 236, 508, C_HRRED, "FC");
+        iconHeart(dc, 60, 452, C_HRRED);
+        var hrTxt = (mHr != null) ? mHr.toString() : "--";
+        txt(dc, 92, 448, Graphics.FONT_NUMBER_MEDIUM, hrTxt, C_WHITE, JL);
+        txt(dc, 222, 470, Graphics.FONT_XTINY, "ppm", C_GREY, JR);
+
+        tile(dc, 244, 396, 472, 508, C_PURP, "TIEMPO");
+        iconTimer(dc, 282, 456, C_PURP);
+        var tTxt = fmtHMS(mTimerSec);
+        var tFont = fitFont(dc, tTxt, pw(150), [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD, Graphics.FONT_SMALL]);
+        txt(dc, 316, 448, tFont, tTxt, C_WHITE, JL);
 
         // ---------- grafico ultimos 40 s ----------
-        txt(dc, 30, 470, Graphics.FONT_TINY, "ÚLTIMOS 40 S", C_GREY, JL);
-        dc.setColor(C_PANEL, C_BG);
-        dc.fillRoundedRectangle(px(30), py(495), pw(420), ph(130), ph(12));
+        rrect(dc, 8, 516, 472, 664, 12, C_CARD, C_BORD, 2);
+        rrect(dc, 8, 523, 15, 657, 3, C_BLUE, null, 0);
+        txt(dc, 28, 534, Graphics.FONT_XTINY, "ÚLTIMOS 40 S", C_GREY, JL);
+        if (hasObj) { txt(dc, 456, 534, Graphics.FONT_XTINY, "BANDA OBJETIVO", C_GREEN, JR); }
 
-        var cx0 = 34.0f;             // borde interior panel
-        var cx1 = 446.0f;
-        var cy0 = 499.0f;            // arriba
-        var cy1 = 621.0f;            // abajo
+        var cx0 = 28.0f;
+        var cx1 = 456.0f;
+        var cy0 = 556.0f;
+        var cy1 = 654.0f;
         var span = mScaleMax - mScaleMin;
         if (span <= 0) { span = 1; }
 
-        // banda objetivo en el grafico
         if (hasObj) {
             var fTop = (mObjHigh - mScaleMin).toFloat() / span;
             var fBot = (mObjLow - mScaleMin).toFloat() / span;
@@ -349,7 +422,6 @@ class PowerZoneView extends WatchUi.DataField {
             dc.fillRectangle(px(cx0), py(yTop), pw(cx1 - cx0), py(yBot) - py(yTop));
         }
 
-        // linea de potencia 3 s; el tramo por encima del objetivo en ambar
         if (mChartN > 1) {
             var start = (mChartN < 40) ? 0 : mChartIdx;
             var stepX = (cx1 - cx0) / (mChartN - 1);
@@ -363,52 +435,34 @@ class PowerZoneView extends WatchUi.DataField {
                 if (fy < cy0) { fy = cy0; }
                 if (fy > cy1) { fy = cy1; }
                 if (k > 0) {
-                    var segColor = C_GREEN;
+                    var segColor = C_WHITE;
                     if (hasObj && (v > mObjHigh || mChart[(start + k - 1) % 40] > mObjHigh)) {
                         segColor = C_AMBER;
                     }
                     dc.setColor(segColor, C_BG);
-                    dc.setPenWidth(2);
+                    dc.setPenWidth(pw(3) > 2 ? pw(3) : 2);
                     dc.drawLine(px(prevX), py(prevY), px(fx), py(fy));
                     dc.setPenWidth(1);
                 }
                 prevX = fx;
                 prevY = fy;
             }
-            // punto final
             dc.setColor(C_WHITE, C_BG);
-            dc.fillCircle(px(prevX), py(prevY), pw(5) > 3 ? pw(5) : 3);
+            dc.fillCircle(px(prevX), py(prevY), pw(6) > 3 ? pw(6) : 3);
         }
 
-        // ---------- fila inferior: NP / TSS / CADENCIA ----------
-        dc.setColor(C_LINE, C_BG);
-        dc.drawLine(px(0), py(700), px(480), py(700));
-        dc.drawLine(px(160), py(710), px(160), py(790));
-        dc.drawLine(px(320), py(710), px(320), py(790));
-
-        txt(dc, 80, 726, Graphics.FONT_TINY, "NP", C_GREY, JC);
-        txt(dc, 240, 726, Graphics.FONT_TINY, "TSS", C_GREY, JC);
-        txt(dc, 400, 726, Graphics.FONT_TINY, "CADENCIA", C_GREY, JC);
-
-        drawBottomValue(dc, 80, mHasPower ? mNp.format("%.0f") : "--", "W");
-        drawBottomValue(dc, 240, mHasPower ? mTss.format("%.1f") : "--", "");
-        drawBottomValue(dc, 400, (mCad != null) ? mCad.toString() : "--", "rpm");
-    }
-
-    private function drawBottomValue(dc, centerX, valTxt, unit) {
-        var valW = dc.getTextWidthInPixels(valTxt, Graphics.FONT_NUMBER_MILD);
-        var unitW = unit.length() > 0 ? dc.getTextWidthInPixels(unit, Graphics.FONT_XTINY) : 0;
-        var gap = unit.length() > 0 ? pw(6) : 0;
-        var total = valW + gap + unitW;
-        var startX = centerX * mSX - total / 2;
-        dc.setColor(C_WHITE, C_BG);
-        dc.drawText(startX, py(766), Graphics.FONT_NUMBER_MILD, valTxt,
-            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        if (unit.length() > 0) {
-            dc.setColor(C_GREY, C_BG);
-            dc.drawText(startX + valW + gap, py(776), Graphics.FONT_XTINY, unit,
-                Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
+        // ---------- NP / TSS / CADENCIA ----------
+        tile(dc, 8, 672, 158, 792, C_BLUE, "NP");
+        tile(dc, 165, 672, 315, 792, C_AMBER, "TSS");
+        tile(dc, 322, 672, 472, 792, C_GREEN, "CADENCIA");
+        iconBolt(dc, 28, 696, C_BLUE);
+        iconGauge(dc, 190, 712, C_AMBER);
+        iconCrank(dc, 346, 708, C_GREEN);
+        txt(dc, 26, 748, Graphics.FONT_NUMBER_MILD, mHasPower ? mNp.format("%.0f") : "--", C_WHITE, JL);
+        txt(dc, 146, 774, Graphics.FONT_XTINY, "W", C_GREY, JR);
+        txt(dc, 182, 748, Graphics.FONT_NUMBER_MILD, mHasPower ? mTss.format("%.1f") : "--", C_WHITE, JL);
+        txt(dc, 340, 748, Graphics.FONT_NUMBER_MILD, (mCad != null) ? mCad.toString() : "--", C_WHITE, JL);
+        txt(dc, 460, 774, Graphics.FONT_XTINY, "rpm", C_GREY, JR);
     }
 
 }
