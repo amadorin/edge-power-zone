@@ -210,17 +210,20 @@ class PowerZoneView extends WatchUi.DataField {
         var lo;
         var hi;
         if (hasObjective()) {
-            // zoom al objetivo: zona ~45% de la barra, extremos redondeados a 5 W
+            // zona siempre centrada: mismo margen (W) por debajo y por encima
             var zoneW = (mObjHigh - mObjLow).toFloat();
-            var margin = zoneW * (1.0f - ZONE_FRAC) / (2.0f * ZONE_FRAC);
-            lo = floorTo((mObjLow.toFloat() - margin).toNumber(), 5);
-            hi = ceilTo((mObjHigh.toFloat() + margin).toNumber(), 5);
+            var mg = ceilTo((zoneW * (1.0f - ZONE_FRAC) / (2.0f * ZONE_FRAC)).toNumber(), 5);
+            if (mg < 10) { mg = 10; }
+            if (mg > mObjLow) { mg = mObjLow; }
+            lo = mObjLow - mg;
+            hi = mObjHigh + mg;
+            mScaleMin = lo;
+            mScaleMax = hi;
+            return;
         } else {
-            // sin objetivo: escala redonda que cubra la potencia actual
             lo = 0;
             hi = 400;
         }
-        // ensanchar si la potencia (3 s) o el grafico se salen
         var ref = mPower3;
         var cm = chartMax();
         if (cm > ref) { ref = cm; }
@@ -352,9 +355,10 @@ class PowerZoneView extends WatchUi.DataField {
             else if (p3 > mObjHigh) { state = 3; diff = p3 - mObjHigh; }
             else { state = 1; }
         }
+        // semaforo: verde en rango, ambar hasta 10 W fuera, rojo mas de 10 W fuera
         var needleColor = C_WHITE;
-        if (state == 2) { needleColor = C_AMBER; }
-        else if (state == 3) { needleColor = C_RED; }
+        if (state == 1) { needleColor = C_GREEN; }
+        else if (state >= 2) { needleColor = (diff <= 10) ? C_AMBER : C_RED; }
 
         var JC = Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER;
         var JL = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
@@ -384,8 +388,8 @@ class PowerZoneView extends WatchUi.DataField {
         var pillBg;
         var pillFg = C_BG;
         if (state == 1)      { pillTxt = "EN ZONA"; pillBg = C_GREEN; }
-        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = C_AMBER; }
-        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = C_RED; pillFg = C_WHITE; }
+        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = needleColor; if (diff > 10) { pillFg = C_WHITE; } }
+        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = needleColor; if (diff <= 10) { pillFg = C_BG; } else { pillFg = C_WHITE; } }
         else                 { pillTxt = "SIN OBJETIVO"; pillBg = C_LINE; pillFg = C_GREY; }
         var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_SMALL) + pw(28);
         var pillX = 456 * mSX - pillW;
@@ -393,8 +397,8 @@ class PowerZoneView extends WatchUi.DataField {
         dc.fillRoundedRectangle(pillX, py(84), pillW, ph(58), ph(14));
         dc.setColor(pillFg, C_BG);
         dc.drawText(pillX + pillW / 2, py(113), Graphics.FONT_SMALL, pillTxt, JC);
-        if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", C_AMBER, JR); }
-        else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", C_RED, JR); }
+        if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", needleColor, JR); }
+        else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", needleColor, JR); }
         if (hasObj) {
             txt(dc, 456, 190, Graphics.FONT_XTINY, (mFromWorkout ? "PASO " : "OBJ ") + mObjLow + "-" + mObjHigh + " W", 0xFFE1C8, JR);
         }
@@ -413,15 +417,14 @@ class PowerZoneView extends WatchUi.DataField {
         dc.drawLine(nx, py(266), nx, py(324));
         dc.setPenWidth(1);
 
-        // etiquetas de escala: se omiten las que chocan con las del objetivo
-        var showMin = true;
-        var showMax = true;
+        // etiquetas de escala: vatios por debajo / por encima del rango objetivo
         if (hasObj) {
-            if (mapX(mObjLow) - 30 < 62) { showMin = false; }
-            if (450 - mapX(mObjHigh) < 62) { showMax = false; }
+            txt(dc, 30, 354, Graphics.FONT_XTINY, "-" + (mObjLow - mScaleMin) + " W", C_GREY, JL);
+            txt(dc, 450, 354, Graphics.FONT_XTINY, "+" + (mScaleMax - mObjHigh) + " W", C_GREY, JR);
+        } else {
+            txt(dc, 30, 354, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL);
+            txt(dc, 450, 354, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR);
         }
-        if (showMin) { txt(dc, 30, 354, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL); }
-        if (showMax) { txt(dc, 450, 354, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR); }
         if (hasObj) {
             txt(dc, mapX(mObjLow), 354, Graphics.FONT_XTINY, mObjLow.toString(), C_GREEN, JC);
             txt(dc, mapX(mObjHigh), 354, Graphics.FONT_XTINY, mObjHigh.toString(), C_GREEN, JC);

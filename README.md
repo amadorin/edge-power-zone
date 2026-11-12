@@ -26,6 +26,11 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 
 Nota: la documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch` y, si falla, usa el objetivo manual. **Sin probar aún en el Edge real.**
 
+### La barra
+
+- La zona objetivo va siempre centrada, con el mismo margen en vatios a cada lado. Las etiquetas de los extremos son "-X W" y "+X W" respecto al rango.
+- Semáforo con la potencia de 3 s: verde dentro del rango, ámbar hasta 10 W fuera, rojo a más de 10 W fuera (aguja y pastilla).
+
 ### Cambiar el objetivo manual y el FTP
 
 Los ajustes de Garmin Connect / Connect IQ en el móvil **no se aplican a apps instaladas a mano** (FAQ oficial de Garmin). Por eso los ajustes están en el propio Edge: mantén pulsado el campo > engranaje > Connect IQ > Zona Potencia 3s. Ahí:
