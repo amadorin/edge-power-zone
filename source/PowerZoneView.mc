@@ -18,6 +18,10 @@ class PowerZoneView extends WatchUi.DataField {
     private var mObjHigh = 258;
     private var mFromWorkout = false;
     private var mStepName = "";
+    private var mStepDurType = -1;
+    private var mStepDurVal = 0;
+    private var mStepSig = "";
+    private var mStepStartSec = 0;
 
     // Datos en vivo
     private var mHasPower = false;
@@ -92,6 +96,7 @@ class PowerZoneView extends WatchUi.DataField {
         mObjHigh = 0;
         mFromWorkout = false;
         mStepName = "";
+        mStepDurType = -1;
         readWorkoutStep();
     }
 
@@ -113,6 +118,14 @@ class PowerZoneView extends WatchUi.DataField {
             mFromWorkout = true;
             if (ws.name != null) { mStepName = ws.name; }
             var st = ws.step;
+            if (st has :activeStep) {
+                // paso de repeticion: activo o descanso segun la intensidad
+                var rest = (ws.intensity == Activity.WORKOUT_INTENSITY_REST)
+                    || (ws.intensity == Activity.WORKOUT_INTENSITY_RECOVERY);
+                st = rest ? st.restStep : st.activeStep;
+            }
+            mStepDurType = st.durationType;
+            mStepDurVal = (st.durationValue != null) ? st.durationValue : 0;
             var tt = st.targetType;
             var isPower = (tt == Activity.WORKOUT_STEP_TARGET_POWER)
                 || (tt == Activity.WORKOUT_STEP_TARGET_POWER_3S)
@@ -135,9 +148,9 @@ class PowerZoneView extends WatchUi.DataField {
     }
 
     // La media del lap se acumula aqui (Activity.Info no trae potencia media de lap).
-    function onTimerLap() as Void { mLapSum = 0.0f; mLapN = 0; }
-    function onWorkoutStepComplete() as Void { mLapSum = 0.0f; mLapN = 0; }
-    function onTimerReset() as Void { mLapSum = 0.0f; mLapN = 0; }
+    function onTimerLap() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
+    function onWorkoutStepComplete() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
+    function onTimerReset() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = 0; }
 
     private function hasObjective() as Boolean {
         return (mObjLow > 0) && (mObjHigh > mObjLow);
@@ -150,6 +163,10 @@ class PowerZoneView extends WatchUi.DataField {
         mAvgPower = info.averagePower;
         mTimerSec = (info.timerTime != null) ? info.timerTime / 1000 : 0;
         mHasPower = (info.currentPower != null) || (info.averagePower != null);
+
+        // inicio del paso: cambia la firma del paso o salta un evento de lap/paso
+        var sig = mStepName + "|" + mStepDurType + "|" + mStepDurVal + "|" + mObjLow + "|" + mObjHigh;
+        if (!sig.equals(mStepSig)) { mStepSig = sig; mStepStartSec = mTimerSec; }
 
         if (info.timerState != Activity.TIMER_STATE_ON) {
             return; // pausado: no acumular muestras
@@ -461,11 +478,21 @@ class PowerZoneView extends WatchUi.DataField {
         txt(dc, 92, 448, Graphics.FONT_NUMBER_MEDIUM, hrTxt, C_WHITE, JL);
         txt(dc, 222, 470, Graphics.FONT_XTINY, "ppm", C_GREY, JR);
 
-        tile(dc, 244, 396, 472, 508, C_PURP, "TIEMPO");
-        iconTimer(dc, 282, 456, C_PURP);
-        var tTxt = fmtHMS(mTimerSec);
+        tile(dc, 244, 396, 472, 508, C_PURP, "");
+        iconTimer(dc, 282, 452, C_PURP);
+        // cuenta atras del paso actual (si dura por tiempo); si no, tiempo del paso o total
+        var tSec = mTimerSec;
+        if (mFromWorkout && mStepDurType == Activity.WORKOUT_STEP_DURATION_TIME && mStepDurVal > 0) {
+            var total = mStepDurVal;
+            if (total >= 10000) { total = total / 1000; } // por si llega en ms
+            tSec = total - (mTimerSec - mStepStartSec);
+            if (tSec < 0) { tSec = 0; }
+        } else if (mFromWorkout) {
+            tSec = mTimerSec - mStepStartSec;
+        }
+        var tTxt = fmtHMS(tSec);
         var tFont = fitFont(dc, tTxt, pw(150), [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD, Graphics.FONT_SMALL]);
-        txt(dc, 316, 448, tFont, tTxt, C_WHITE, JL);
+        txt(dc, 316, 456, tFont, tTxt, C_WHITE, JL);
 
         // ---------- grafico ultimos 40 s ----------
         rrect(dc, 8, 516, 472, 664, 12, C_CARD, C_BORD, 2);

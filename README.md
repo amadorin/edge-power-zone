@@ -8,7 +8,7 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 
 ## Qué muestra
 
-- **FC** y **tiempo** de actividad (fila superior).
+- **FC** y **reloj** (fila superior). El reloj es la cuenta atrás del tiempo que queda del paso actual si el paso dura por tiempo; en pasos abiertos o por distancia, tiempo transcurrido del paso; sin entrenamiento, tiempo total.
 - **POT 3S**: media de potencia de los últimos 3 segundos, en grande. La aguja de la barra, la pastilla de estado y el gráfico usan esta misma media de 3 s (no la potencia instantánea).
 - **MEDIA**: potencia media de la actividad.
 - **OBJ / PASO**: rango objetivo en vatios, tomado del paso activo del entrenamiento.
