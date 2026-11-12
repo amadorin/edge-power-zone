@@ -409,11 +409,6 @@ class PowerZoneView extends WatchUi.DataField {
             else if (lapAvg > mObjHigh) { d = lapAvg - mObjHigh; }
             avgCol = (d == 0) ? C_GREEN : ((d <= 10) ? C_AMBER : C_RED);
         }
-        var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
-        var avgW = dc.getTextWidthInPixels(avgTxt, Graphics.FONT_NUMBER_MILD) / mSX;
-        txt(dc, 456, 74, Graphics.FONT_XTINY, "MEDIA LAP", C_GREY, JR);
-        txt(dc, 456 - wW - 6 - avgW, 30, Graphics.FONT_NUMBER_MILD, avgTxt, avgCol, JL);
-        txt(dc, 456 - wW, 36, Graphics.FONT_SMALL, "W", C_GREY, JL);
 
         // potencia 3 s grande
         var bigTxt = p3.toString();
@@ -421,21 +416,11 @@ class PowerZoneView extends WatchUi.DataField {
         var bigW = dc.getTextWidthInPixels(bigTxt, Graphics.FONT_NUMBER_THAI_HOT) / mSX;
         txt(dc, 26 + bigW + 6, 196, Graphics.FONT_MEDIUM, "W", C_GREY, JL);
 
-        // pastilla de estado + objetivo
-        var pillTxt;
-        var pillBg;
-        var pillFg = 0x0B0E14;
-        if (state == 1)      { pillTxt = "EN ZONA"; pillBg = C_GREEN; }
-        else if (state == 2) { pillTxt = "-" + diff + " W"; pillBg = needleColor; if (diff > 10) { pillFg = 0xFFFFFF; } }
-        else if (state == 3) { pillTxt = "+" + diff + " W"; pillBg = needleColor; if (diff <= 10) { pillFg = 0x0B0E14; } else { pillFg = 0xFFFFFF; } }
-        else if (hasObj)     { pillTxt = "PEDALEA"; pillBg = C_LINE; pillFg = C_GREY; }
-        else                 { pillTxt = "SIN OBJETIVO"; pillBg = C_LINE; pillFg = C_GREY; }
-        var pillW = dc.getTextWidthInPixels(pillTxt, Graphics.FONT_SMALL) + pw(28);
-        var pillX = 456 * mSX - pillW;
-        dc.setColor(pillBg, C_BG);
-        dc.fillRoundedRectangle(pillX, py(84), pillW, ph(58), ph(14));
-        dc.setColor(pillFg, C_BG);
-        dc.drawText(pillX + pillW / 2, py(113), Graphics.FONT_SMALL, pillTxt, JC);
+        // MEDIA LAP grande a la derecha (donde estaba la pastilla)
+        var wW = dc.getTextWidthInPixels("W", Graphics.FONT_SMALL) / mSX;
+        txt(dc, 456, 84, Graphics.FONT_XTINY, "MEDIA LAP", C_GREY, JR);
+        txt(dc, 456 - wW - 6, 126, Graphics.FONT_NUMBER_MEDIUM, avgTxt, avgCol, JR);
+        txt(dc, 456 - wW, 134, Graphics.FONT_SMALL, "W", C_GREY, JL);
         if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", needleColor, JR); }
         else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", needleColor, JR); }
         if (hasObj) {

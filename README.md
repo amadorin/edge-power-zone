@@ -38,7 +38,7 @@ El campo sigue el modo del Edge: lee `getBackgroundColor()` del campo de datos (
 ### La barra
 
 - La zona objetivo va siempre centrada, con el mismo margen en vatios a cada lado. Las etiquetas de los extremos son "-X W" y "+X W" respecto al rango.
-- Arriba a la derecha: MEDIA LAP (media del lap actual, acumulada en el campo y reiniciada en cada lap/paso), con el mismo color de semáforo.
+- A la derecha, bajo la fila superior: MEDIA LAP grande (media del lap actual, acumulada en el campo y reiniciada en cada lap/paso), con el color de semáforo. Ya no hay pastilla de estado: el objetivo se ve en la barra y en "PASO x-y W".
 - Semáforo con la potencia de 3 s: verde dentro del rango, ámbar hasta 10 W fuera, rojo a más de 10 W fuera (aguja y pastilla).
 
 ## Instalación rápida (2 minutos, sin compilar)
