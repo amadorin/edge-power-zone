@@ -11,7 +11,7 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 - **FC** y **tiempo** de actividad (fila superior).
 - **POT 3S**: media de potencia de los últimos 3 segundos, en grande. La aguja de la barra, la pastilla de estado y el gráfico usan esta misma media de 3 s (no la potencia instantánea).
 - **MEDIA**: potencia media de la actividad.
-- **OBJ**: rango objetivo en vatios (se fija en los ajustes, ver abajo).
+- **OBJ / PASO**: rango objetivo en vatios, tomado del paso activo del entrenamiento.
 - **Pastilla de estado**: EN ZONA (verde) / POR DEBAJO -X W (ámbar) / POR ENCIMA +X W (rojo).
 - **Barra de potencia con zoom dinámico**: la escala se centra en el objetivo de modo que la zona ocupa ~45% de la barra; los extremos se redondean a 5 W y la escala se ensancha si la potencia sale del rango. Aguja blanca dentro de la zona, ámbar por debajo, roja por encima.
 - **ÚLTIMOS 40 S**: gráfico de línea de la potencia 3 s con la banda del objetivo; el tramo que supera el objetivo se pinta en ámbar.
@@ -101,7 +101,7 @@ manifest.xml                  # app tipo datafield, edge1050 y edge1060, minApiL
 monkey.jungle
 source/PowerZoneApp.mc        # entrada de la app
 source/PowerZoneView.mc       # toda la lógica y el dibujo
-resources/                    # textos (español), ajustes (objetivo/FTP), icono
+resources/                    # textos (español), ajustes (FTP), icono
 releases/edge-power-zone-edge1050.prg  # diseño tiles, Edge 1050
 releases/edge-power-zone-edge1050-simple.prg  # diseño simple anterior (respaldo)
 releases/edge-power-zone-edge1060-simple.prg  # idem, Edge 1060
