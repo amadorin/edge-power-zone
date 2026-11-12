@@ -6,10 +6,9 @@ import Toybox.Math;
 import Toybox.WatchUi;
 
 // Campo de datos para Edge 1050 y 1060 (480x800): potencia 3 s con zona objetivo.
-// OJO: una data field NO puede leer el paso de entrenamiento activo
-// (Activity.getCurrentWorkoutStep() lanza OperationNotAllowedException en
-// data fields). El objetivo se fija en los ajustes de la app
-// (Garmin Connect / Connect IQ Store > Ajustes).
+// El objetivo se lee del paso de entrenamiento activo del Edge
+// (Activity.getCurrentWorkoutStep, API 3.2.0, disponible en Edge 1050).
+// Si no hay entrenamiento cargado, se usa el objetivo manual (ajustes en el Edge).
 
 class PowerZoneView extends WatchUi.DataField {
 
@@ -17,6 +16,8 @@ class PowerZoneView extends WatchUi.DataField {
     private var mFtp = 430;
     private var mObjLow = 215;
     private var mObjHigh = 258;
+    private var mFromWorkout = false;
+    private var mStepName = "";
 
     // Datos en vivo
     private var mHasPower = false;
@@ -82,18 +83,44 @@ class PowerZoneView extends WatchUi.DataField {
     }
 
     private function loadSettings() as Void {
+        mFtp = PzSettings.get("ftp", 430);
+        if (mFtp <= 0) { mFtp = 430; }
+        mObjLow = PzSettings.get("objLow", 215);
+        mObjHigh = PzSettings.get("objHigh", 258);
+        mFromWorkout = false;
+        mStepName = "";
+        readWorkoutStep();
+    }
+
+    // Objetivo de potencia del paso activo. Valores FIT: >1000 = vatios + 1000,
+    // 0..1000 = % del FTP. Sin entrenamiento cargado: se queda el manual.
+    private function readWorkoutStep() as Void {
         try {
-            var v = Application.Properties.getValue("ftp");
-            if (v != null && v.toNumber() > 0) { mFtp = v.toNumber(); }
-        } catch (e) {}
-        try {
-            var v = Application.Properties.getValue("objLow");
-            if (v != null && v.toNumber() >= 0) { mObjLow = v.toNumber(); }
-        } catch (e) {}
-        try {
-            var v = Application.Properties.getValue("objHigh");
-            if (v != null && v.toNumber() >= 0) { mObjHigh = v.toNumber(); }
-        } catch (e) {}
+            if (!(Activity has :getCurrentWorkoutStep)) { return; }
+            var ws = Activity.getCurrentWorkoutStep();
+            if (ws == null) { return; }
+            mFromWorkout = true;
+            if (ws.name != null) { mStepName = ws.name; }
+            var st = ws.step;
+            var tt = st.targetType;
+            var isPower = (tt == Activity.WORKOUT_STEP_TARGET_POWER)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_3S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_10S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_30S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_LAP);
+            var lo = st.targetValueLow;
+            var hi = st.targetValueHigh;
+            if (!isPower || lo == null || hi == null) {
+                mObjLow = 0; mObjHigh = 0; // paso sin objetivo de potencia
+                return;
+            }
+            if (lo > 1000) { lo = lo - 1000; } else { lo = (mFtp * lo / 100.0 + 0.5).toNumber(); }
+            if (hi > 1000) { hi = hi - 1000; } else { hi = (mFtp * hi / 100.0 + 0.5).toNumber(); }
+            mObjLow = lo;
+            mObjHigh = hi;
+        } catch (e) {
+            mFromWorkout = false; // API no permitida: objetivo manual
+        }
     }
 
     private function hasObjective() as Boolean {
@@ -361,7 +388,7 @@ class PowerZoneView extends WatchUi.DataField {
         if (state == 2) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR DEBAJO", C_AMBER, JR); }
         else if (state == 3) { txt(dc, 456, 162, Graphics.FONT_XTINY, "POR ENCIMA", C_RED, JR); }
         if (hasObj) {
-            txt(dc, 456, 190, Graphics.FONT_XTINY, "OBJ " + mObjLow + "-" + mObjHigh + " W", 0xFFE1C8, JR);
+            txt(dc, 456, 190, Graphics.FONT_XTINY, (mFromWorkout ? "PASO " : "OBJ ") + mObjLow + "-" + mObjHigh + " W", 0xFFE1C8, JR);
         }
 
         // barra de potencia con zoom dinamico

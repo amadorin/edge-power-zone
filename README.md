@@ -19,15 +19,22 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 - **TSS**: estimado en vivo a partir de la NP y el FTP configurado (430 W por defecto). Es una estimación: el Edge calcula su propio TSS al guardar la actividad y puede diferir.
 - **CADENCIA**.
 
-## Importante: el objetivo es manual
+## De dónde sale el objetivo
 
-Garmin no permite a un campo de datos leer el paso de entrenamiento activo (`Activity.getCurrentWorkoutStep()` está prohibido en campos de datos y lanza una excepción; `Activity.Info` tampoco expone el objetivo del paso). Por eso el rango objetivo se introduce en los **ajustes del campo** (objetivo mínimo y máximo en W). Por eso también el "T. RESTANTE" del paso no existe: en su lugar la fila inferior muestra NP, TSS y cadencia.
+1. **Paso de entrenamiento activo** (TrainingPeaks > Garmin): el campo lee el rango de potencia del paso actual con `Activity.getCurrentWorkoutStep()` (Connect IQ API 3.2.0, soportado en Edge 1050/1060). Valores en vatios o en % de FTP (se convierten con tu FTP). En pantalla sale "PASO 215-258 W". Si el paso no tiene objetivo de potencia, no se dibuja zona.
+2. **Sin entrenamiento cargado**: objetivo manual (por defecto 215-258 W, FTP 430 W).
 
-Cambiar los ajustes (incluso en plena salida, desde el móvil):
+Nota: la documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch` y, si falla, usa el objetivo manual. **Sin probar aún en el Edge real.**
 
-- **Garmin Connect (móvil)**: Más → Dispositivos Garmin → Edge 1050 → Gestión de aplicaciones Connect IQ → Zona Potencia 3s → Ajustes.
-- Valores por defecto: objetivo 215-258 W, FTP 430 W.
-- Para desactivar la zona: pon el objetivo mínimo a 0 (la barra pasa a escala automática y la pastilla muestra SIN OBJETIVO).
+### Cambiar el objetivo manual y el FTP
+
+Los ajustes de Garmin Connect / Connect IQ en el móvil **no se aplican a apps instaladas a mano** (FAQ oficial de Garmin). Por eso los ajustes están en el propio Edge: mantén pulsado el campo > engranaje > Connect IQ > Zona Potencia 3s. Ahí:
+
+- Objetivo mínimo / máximo y FTP: +10, +5, -5, -10 W (se guarda en el Edge).
+- Preset por % de FTP: Z2, tempo, sweet spot, umbral, VO2.
+- Restablecer: 215-258 W, FTP 430 W.
+
+Alternativas si el menú no aparece en tu firmware: compilar con otros valores por defecto, o copiar un archivo `.SET` con el mismo nombre que el `.prg` a `GARMIN/Apps/SETTINGS`.
 
 ## Instalación rápida (2 minutos, sin compilar)
 
@@ -39,7 +46,7 @@ Cambiar los ajustes (incluso en plena salida, desde el móvil):
 3. Conecta el Edge al ordenador por USB y copia el `.prg` a la carpeta `GARMIN/Apps` del Edge.
 4. Expulsa el Edge con seguridad y desconecta el cable. Espera a que reinicie.
 5. En el Edge: Menú → Perfiles de actividad → tu perfil de bici → Pantallas de datos → añade una pantalla nueva de **1 campo** → pulsa el campo → **Connect IQ** → **Zona Potencia 3s**.
-6. Pon tu objetivo y tu FTP (ver "Cambiar los ajustes" arriba): por defecto salen 215-258 W y FTP 430 W, que casi seguro no son los tuyos.
+6. Pon tu FTP en el menú del campo (ver "Cambiar el objetivo manual y el FTP"); con un entrenamiento cargado el objetivo sale solo del paso.
 
 Edge 1050 y 1060 tienen la misma pantalla (480x800, API 6.0). Está pensado para una pantalla de un solo campo. Uso bajo tu responsabilidad; proyecto personal, sin relación con Garmin.
 
