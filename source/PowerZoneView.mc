@@ -22,6 +22,14 @@ class PowerZoneView extends WatchUi.DataField {
     private var mStepDurVal = 0;
     private var mStepSig = "";
     private var mStepStartSec = 0;
+    // media del paso (para el aviso de fin de paso)
+    private var mStepSum = 0.0f;
+    private var mStepN = 0;
+    private var mAccLow = 0;
+    private var mAccHigh = 0;
+    private var mPendingAlert = null;
+    private var mLastGood = 0;
+    private var mLastNeutral = 0;
 
     // Datos en vivo
     private var mHasPower = false;
@@ -148,9 +156,34 @@ class PowerZoneView extends WatchUi.DataField {
     }
 
     // La media del lap se acumula aqui (Activity.Info no trae potencia media de lap).
-    function onTimerLap() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
-    function onWorkoutStepComplete() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
+    function onTimerLap() as Void { endStep(); resetStepAcc(); mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
+    function onWorkoutStepComplete() as Void { endStep(); resetStepAcc(); mLapSum = 0.0f; mLapN = 0; mStepStartSec = mTimerSec; }
     function onTimerReset() as Void { mLapSum = 0.0f; mLapN = 0; mStepStartSec = 0; }
+
+    private function resetStepAcc() as Void {
+        mStepSum = 0.0f;
+        mStepN = 0;
+        mAccLow = mObjLow;
+        mAccHigh = mObjHigh;
+    }
+
+    // Fin de paso: solo con objetivo de potencia y al menos 10 s de datos
+    // (los descansos sin objetivo de potencia no avisan).
+    private function endStep() as Void {
+        if (!mFromWorkout || mAccLow <= 0 || mAccHigh <= mAccLow || mStepN < 10) { return; }
+        var avg = (mStepSum / mStepN + 0.5f).toNumber();
+        var good = (avg >= mAccLow) && (avg <= mAccHigh);
+        var head = avg + " W";
+        var text;
+        if (good) {
+            mLastGood = PzPhrases.pick(PzPhrases.GOOD, mLastGood);
+            text = PzPhrases.GOOD[mLastGood];
+        } else {
+            mLastNeutral = PzPhrases.pick(PzPhrases.NEUTRAL, mLastNeutral);
+            text = PzPhrases.NEUTRAL[mLastNeutral];
+        }
+        mPendingAlert = new PzAlert(head, text, good);
+    }
 
     private function hasObjective() as Boolean {
         return (mObjLow > 0) && (mObjHigh > mObjLow);
@@ -166,13 +199,25 @@ class PowerZoneView extends WatchUi.DataField {
 
         // inicio del paso: cambia la firma del paso o salta un evento de lap/paso
         var sig = mStepName + "|" + mStepDurType + "|" + mStepDurVal + "|" + mObjLow + "|" + mObjHigh;
-        if (!sig.equals(mStepSig)) { mStepSig = sig; mStepStartSec = mTimerSec; }
+        if (!sig.equals(mStepSig)) {
+            endStep();
+            mStepSig = sig;
+            mStepStartSec = mTimerSec;
+            resetStepAcc();
+        }
+        if (mPendingAlert != null) {
+            var al = mPendingAlert;
+            mPendingAlert = null;
+            try { showAlert(al); } catch (e) {}
+        }
 
         if (info.timerState != Activity.TIMER_STATE_ON) {
             return; // pausado: no acumular muestras
         }
 
         var pv = (info.currentPower != null) ? info.currentPower.toFloat() : 0.0f;
+        mStepSum += pv;
+        mStepN++;
         mLapSum += pv;
         mLapN++;
 
