@@ -21,10 +21,15 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 
 ## De dónde sale el objetivo
 
-1. **Paso de entrenamiento activo** (TrainingPeaks > Garmin): el campo lee el rango de potencia del paso actual con `Activity.getCurrentWorkoutStep()` (Connect IQ API 3.2.0, soportado en Edge 1050/1060). Valores en vatios o en % de FTP (<150 se interpreta como % y se convierte con tu FTP). En pantalla sale "PASO 215-258 W". Si el paso no tiene objetivo de potencia, no se dibuja zona.
-2. **Sin entrenamiento cargado**: objetivo manual (por defecto 215-258 W, FTP 430 W).
+Solo del **paso de entrenamiento activo** (TrainingPeaks > Garmin): el campo lee el rango de potencia del paso actual con `Activity.getCurrentWorkoutStep()` (Connect IQ API 3.2.0, soportado en Edge 1050/1060). Cada lap o paso lo cambia solo (por ejemplo una serie a 500 W). Valores en vatios directos (>=150), vatios+1000 o % de FTP (<150, se convierte con tu FTP). En pantalla sale "PASO 387-408 W".
 
-Nota: la documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch` y, si falla, usa el objetivo manual. **Sin probar aún en el Edge real.**
+Sin entrenamiento cargado, o con un paso sin objetivo de potencia, no se dibuja zona y pone "SIN OBJETIVO". No hay objetivo manual.
+
+La documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch`. **Probado en un Edge real solo para el diseño; la lectura del paso se está probando.**
+
+### Cambiar el FTP
+
+Solo se configura el FTP (lo usan IF y TSS; 430 W por defecto). Los ajustes de Garmin Connect en el móvil **no se aplican a apps instaladas a mano** (FAQ oficial de Garmin), así que se cambia en el propio Edge: mantén pulsado el campo > engranaje > Connect IQ > Zona Potencia 3s. Pasos de +/-5 y +/-10 W, y "Restablecer FTP".
 
 ### Tema claro / oscuro
 
@@ -36,16 +41,6 @@ El campo sigue el modo del Edge: lee `getBackgroundColor()` del campo de datos (
 - Arriba a la derecha: MEDIA LAP (media del lap actual, acumulada en el campo y reiniciada en cada lap/paso), con el mismo color de semáforo.
 - Semáforo con la potencia de 3 s: verde dentro del rango, ámbar hasta 10 W fuera, rojo a más de 10 W fuera (aguja y pastilla).
 
-### Cambiar el objetivo manual y el FTP
-
-Los ajustes de Garmin Connect / Connect IQ en el móvil **no se aplican a apps instaladas a mano** (FAQ oficial de Garmin). Por eso los ajustes están en el propio Edge: mantén pulsado el campo > engranaje > Connect IQ > Zona Potencia 3s. Ahí:
-
-- Objetivo mínimo / máximo y FTP: +10, +5, -5, -10 W (se guarda en el Edge).
-- Preset por % de FTP: Z2, tempo, sweet spot, umbral, VO2.
-- Restablecer: 215-258 W, FTP 430 W.
-
-Alternativas si el menú no aparece en tu firmware: compilar con otros valores por defecto, o copiar un archivo `.SET` con el mismo nombre que el `.prg` a `GARMIN/Apps/SETTINGS`.
-
 ## Instalación rápida (2 minutos, sin compilar)
 
 1. Elige tu archivo en la carpeta [`releases/`](releases/):
@@ -56,7 +51,7 @@ Alternativas si el menú no aparece en tu firmware: compilar con otros valores p
 3. Conecta el Edge al ordenador por USB y copia el `.prg` a la carpeta `GARMIN/Apps` del Edge.
 4. Expulsa el Edge con seguridad y desconecta el cable. Espera a que reinicie.
 5. En el Edge: Menú → Perfiles de actividad → tu perfil de bici → Pantallas de datos → añade una pantalla nueva de **1 campo** → pulsa el campo → **Connect IQ** → **Zona Potencia 3s**.
-6. Pon tu FTP en el menú del campo (ver "Cambiar el objetivo manual y el FTP"); con un entrenamiento cargado el objetivo sale solo del paso.
+6. Pon tu FTP en el menú del campo (ver "Cambiar el FTP"); el objetivo sale solo del paso del entrenamiento.
 
 Edge 1050 y 1060 tienen la misma pantalla (480x800, API 6.0). Está pensado para una pantalla de un solo campo. Uso bajo tu responsabilidad; proyecto personal, sin relación con Garmin.
 

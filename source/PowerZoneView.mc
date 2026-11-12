@@ -8,7 +8,7 @@ import Toybox.WatchUi;
 // Campo de datos para Edge 1050 y 1060 (480x800): potencia 3 s con zona objetivo.
 // El objetivo se lee del paso de entrenamiento activo del Edge
 // (Activity.getCurrentWorkoutStep, API 3.2.0, disponible en Edge 1050).
-// Si no hay entrenamiento cargado, se usa el objetivo manual (ajustes en el Edge).
+// Sin entrenamiento o sin objetivo de potencia en el paso: SIN OBJETIVO.
 
 class PowerZoneView extends WatchUi.DataField {
 
@@ -88,8 +88,8 @@ class PowerZoneView extends WatchUi.DataField {
     private function loadSettings() as Void {
         mFtp = PzSettings.get("ftp", 430);
         if (mFtp <= 0) { mFtp = 430; }
-        mObjLow = PzSettings.get("objLow", 215);
-        mObjHigh = PzSettings.get("objHigh", 258);
+        mObjLow = 0; // el objetivo sale solo del paso del entrenamiento
+        mObjHigh = 0;
         mFromWorkout = false;
         mStepName = "";
         readWorkoutStep();
@@ -130,7 +130,7 @@ class PowerZoneView extends WatchUi.DataField {
             mObjLow = lo;
             mObjHigh = hi;
         } catch (e) {
-            mFromWorkout = false; // API no permitida: objetivo manual
+            mFromWorkout = false; mObjLow = 0; mObjHigh = 0; // API no permitida: sin objetivo
         }
     }
 

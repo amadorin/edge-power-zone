@@ -1,11 +1,5 @@
 <settings>
     <group id="objGroup" title="@Strings.GroupTitle">
-        <setting propertyKey="@Properties.objLow" title="@Strings.ObjLowTitle">
-            <settingConfig type="numeric"/>
-        </setting>
-        <setting propertyKey="@Properties.objHigh" title="@Strings.ObjHighTitle">
-            <settingConfig type="numeric"/>
-        </setting>
         <setting propertyKey="@Properties.ftp" title="@Strings.FtpTitle">
             <settingConfig type="numeric"/>
         </setting>

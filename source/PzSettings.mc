@@ -25,8 +25,6 @@ module PzSettings {
     }
 
     function reset() as Void {
-        Application.Storage.deleteValue("objLow");
-        Application.Storage.deleteValue("objHigh");
         Application.Storage.deleteValue("ftp");
     }
 
@@ -57,16 +55,6 @@ class PzMainDelegate extends WatchUi.Menu2InputDelegate {
 
     function onSelect(item as WatchUi.MenuItem) as Void {
         var id = item.getId() as String;
-        if (id.equals("preset")) {
-            var pm = new WatchUi.Menu2({:title => "Preset (% FTP)"});
-            pm.addItem(new WatchUi.MenuItem("Z2 56-75%", null, "56,75", {}));
-            pm.addItem(new WatchUi.MenuItem("Tempo 76-90%", null, "76,90", {}));
-            pm.addItem(new WatchUi.MenuItem("Sweet spot 88-94%", null, "88,94", {}));
-            pm.addItem(new WatchUi.MenuItem("Umbral 95-105%", null, "95,105", {}));
-            pm.addItem(new WatchUi.MenuItem("VO2 106-120%", null, "106,120", {}));
-            WatchUi.pushView(pm, new PzPresetDelegate(self), WatchUi.SLIDE_LEFT);
-            return;
-        }
         if (id.equals("reset")) {
             PzSettings.reset();
             refresh();
@@ -82,7 +70,7 @@ class PzMainDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function refresh() as Void {
-        var keys = ["objLow", "objHigh", "ftp"];
+        var keys = ["ftp"];
         for (var i = 0; i < keys.size(); i++) {
             var idx = mMenu.findItemById(keys[i]);
             if (idx >= 0) {
@@ -109,8 +97,8 @@ class PzAdjustDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item as WatchUi.MenuItem) as Void {
         var delta = (item.getId() as String).toNumber();
         var v = PzSettings.get(mKey, PzSettings.defOf(mKey)) + delta;
-        var lo = mKey.equals("ftp") ? 50 : 0;
-        var hi = mKey.equals("ftp") ? 800 : 1500;
+        var lo = 50;
+        var hi = 800;
         if (v < lo) { v = lo; }
         if (v > hi) { v = hi; }
         PzSettings.put(mKey, v);
@@ -120,22 +108,3 @@ class PzAdjustDelegate extends WatchUi.Menu2InputDelegate {
     }
 }
 
-class PzPresetDelegate extends WatchUi.Menu2InputDelegate {
-    private var mParent;
-    function initialize(parent as PzMainDelegate) {
-        Menu2InputDelegate.initialize();
-        mParent = parent;
-    }
-    function onSelect(item as WatchUi.MenuItem) as Void {
-        var id = item.getId() as String;
-        var c = id.find(",");
-        var a = id.substring(0, c).toNumber();
-        var b = id.substring(c + 1, id.length()).toNumber();
-        var ftp = PzSettings.get("ftp", 430);
-        PzSettings.put("objLow", (ftp * a / 100.0 + 0.5).toNumber());
-        PzSettings.put("objHigh", (ftp * b / 100.0 + 0.5).toNumber());
-        mParent.refresh();
-        WatchUi.requestUpdate();
-        WatchUi.popView(WatchUi.SLIDE_RIGHT);
-    }
-}
