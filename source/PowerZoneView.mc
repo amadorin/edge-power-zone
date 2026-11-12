@@ -22,6 +22,13 @@ class PowerZoneView extends WatchUi.DataField {
     private var mStepDurVal = 0;
     private var mStepSig = "";
     private var mStepStartSec = 0;
+    // siguiente paso (aviso de los ultimos 5 s)
+    private var mNextKind = 0; // 0 = no hay siguiente, 1 = potencia, 2 = sin potencia
+    private var mNextLow = 0;
+    private var mNextHigh = 0;
+    private var mBanner = "";
+    private var mBannerKind = 0; // 1 aprieta, 2 afloja, 3 igual/ultimo
+    private var mBannerFrame = 0;
     // media del paso (para el aviso de fin de paso)
     private var mStepSum = 0.0f;
     private var mStepN = 0;
@@ -106,6 +113,7 @@ class PowerZoneView extends WatchUi.DataField {
         mStepName = "";
         mStepDurType = -1;
         readWorkoutStep();
+        readNextStep();
     }
 
     // Objetivo de potencia del paso activo. Valores FIT: >1000 = vatios + 1000,
@@ -116,6 +124,70 @@ class PowerZoneView extends WatchUi.DataField {
         if (v > 1000) { return v - 1000; }
         if (v >= 150) { return v; }
         return (mFtp * v / 100.0 + 0.5).toNumber();
+    }
+
+    // Siguiente paso: Activity.getNextWorkoutStep() (API 3.2.0). null = ultimo paso.
+    private function readNextStep() as Void {
+        mNextKind = 0;
+        mNextLow = 0;
+        mNextHigh = 0;
+        if (!mFromWorkout) { return; }
+        try {
+            if (!(Activity has :getNextWorkoutStep)) { return; }
+            var nx = Activity.getNextWorkoutStep();
+            if (nx == null) { return; }
+            var st = nx.step;
+            if (st has :activeStep) {
+                var rest = (nx.intensity == Activity.WORKOUT_INTENSITY_REST)
+                    || (nx.intensity == Activity.WORKOUT_INTENSITY_RECOVERY);
+                st = rest ? st.restStep : st.activeStep;
+            }
+            mNextKind = 2;
+            var tt = st.targetType;
+            var isPower = (tt == Activity.WORKOUT_STEP_TARGET_POWER)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_3S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_10S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_30S)
+                || (tt == Activity.WORKOUT_STEP_TARGET_POWER_LAP);
+            if (isPower && st.targetValueLow != null && st.targetValueHigh != null) {
+                mNextKind = 1;
+                mNextLow = toWatts(st.targetValueLow);
+                mNextHigh = toWatts(st.targetValueHigh);
+            }
+        } catch (e) {
+            mNextKind = 0;
+        }
+    }
+
+    // Texto del aviso: solo en los ultimos 5 s de un paso por tiempo con objetivo de potencia.
+    private function updateBanner() as Void {
+        mBanner = "";
+        if (!mFromWorkout || !hasObjective() || mStepDurType != Activity.WORKOUT_STEP_DURATION_TIME || mStepDurVal <= 0) { return; }
+        var total = mStepDurVal;
+        if (total >= 10000) { total = total / 1000; }
+        var rem = total - (mTimerSec - mStepStartSec);
+        if (rem > 5 || rem < 1 || total < 8) { return; }
+        mBannerFrame = 5 - rem; // 0..4
+        var cur = (mObjLow + mObjHigh) / 2;
+        if (mNextKind == 0) {
+            mBanner = "Último esfuerzo, aprieta y terminamos";
+            mBannerKind = 3;
+        } else if (mNextKind == 2) {
+            mBanner = "Se acaba la serie, ahora toca aflojar";
+            mBannerKind = 2;
+        } else {
+            var nxt = (mNextLow + mNextHigh) / 2;
+            if (nxt * 100 > cur * 105) {
+                mBanner = "Prepárate, el siguiente aprieta más: " + nxt + " W";
+                mBannerKind = 1;
+            } else if (nxt * 100 < cur * 95) {
+                mBanner = "El siguiente es más tranquilo, a " + nxt + " W";
+                mBannerKind = 2;
+            } else {
+                mBanner = "Mismo ritmo en el siguiente: " + nxt + " W";
+                mBannerKind = 3;
+            }
+        }
     }
 
     private function readWorkoutStep() as Void {
@@ -210,6 +282,7 @@ class PowerZoneView extends WatchUi.DataField {
             mPendingAlert = null;
             try { showAlert(al); } catch (e) {}
         }
+        updateBanner();
 
         if (info.timerState != Activity.TIMER_STATE_ON) {
             return; // pausado: no acumular muestras
@@ -590,6 +663,26 @@ class PowerZoneView extends WatchUi.DataField {
             }
             dc.setColor(C_WHITE, C_BG);
             dc.fillCircle(px(prevX), py(prevY), pw(6) > 3 ? pw(6) : 3);
+        }
+
+        // ---------- aviso del siguiente paso (ultimos 5 s) ----------
+        if (mBanner.length() > 0) {
+            var bc = (mBannerKind == 1) ? C_RED : ((mBannerKind == 2) ? C_BLUE : C_PURP);
+            rrect(dc, 8, 672, 472, 792, 12, bc, null, 0);
+            var f = Graphics.FONT_SMALL;
+            var tw = dc.getTextWidthInPixels(mBanner, f);
+            var vw = pw(430);
+            var ox = 0;
+            if (tw > vw) {
+                // marquee: el Edge redibuja ~1 vez por segundo, asi que avanza a saltos
+                // y en el ultimo cuadro ya se ve el final del texto
+                ox = ((tw - vw) * mBannerFrame / 4).toNumber();
+            }
+            dc.setClip(px(20), py(680), vw, ph(104));
+            dc.setColor(0xFFFFFF, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(px(24) - ox, py(732), f, mBanner, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.clearClip();
+            return;
         }
 
         // ---------- IF (NP total / FTP) / TSS / CADENCIA ----------

@@ -35,6 +35,10 @@ Solo se configura el FTP (lo usan IF y TSS; 430 W por defecto). Los ajustes de G
 
 Al acabar un paso con objetivo de potencia (mínimo 10 s de datos), el campo calcula la media de potencia del paso (acumulador propio) y lanza un aviso con `showAlert` (DataFieldAlert, API 3.2.0, Edge 1050; el Edge decide cuánto dura, unos segundos). Si la media está en el rango del entrenador, felicita con una frase al azar (35 frases); si no, te toma el pelo con otra al azar (24 frases, tono gym-bro, sin ofensas serias). Los pasos sin objetivo de potencia (descansos) no avisan.
 
+### Aviso del siguiente paso
+
+En los últimos 5 s de un paso por tiempo con objetivo de potencia, el campo tapa la fila inferior (IF/TSS/cadencia) con un rótulo de color que anuncia el siguiente paso, leído con `Activity.getNextWorkoutStep()` (API 3.2.0): "Prepárate, el siguiente aprieta más: 450 W" (rojo), "El siguiente es más tranquilo, a 200 W" (azul), "Mismo ritmo en el siguiente: X W", o "Último esfuerzo, aprieta y terminamos" si no hay más pasos. Si el texto no cabe se desplaza a saltos (el Edge redibuja ~1 vez por segundo) y en el último cuadro ya se lee el final. Pasos de menos de 8 s no lo muestran.
+
 ### Tema claro / oscuro
 
 El campo sigue el modo del Edge: lee `getBackgroundColor()` del campo de datos (negro = oscuro, cualquier otro = claro) y cambia la paleta en cada redibujado. En claro, los verdes/ámbar/rojos son más oscuros para mantener el contraste.
