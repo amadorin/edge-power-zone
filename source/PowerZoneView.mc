@@ -405,8 +405,15 @@ class PowerZoneView extends WatchUi.DataField {
         dc.drawLine(nx, py(266), nx, py(324));
         dc.setPenWidth(1);
 
-        txt(dc, 30, 354, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL);
-        txt(dc, 450, 354, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR);
+        // etiquetas de escala: se omiten las que chocan con las del objetivo
+        var showMin = true;
+        var showMax = true;
+        if (hasObj) {
+            if (mapX(mObjLow) - 30 < 62) { showMin = false; }
+            if (450 - mapX(mObjHigh) < 62) { showMax = false; }
+        }
+        if (showMin) { txt(dc, 30, 354, Graphics.FONT_XTINY, mScaleMin.toString(), C_GREY, JL); }
+        if (showMax) { txt(dc, 450, 354, Graphics.FONT_XTINY, mScaleMax.toString(), C_GREY, JR); }
         if (hasObj) {
             txt(dc, mapX(mObjLow), 354, Graphics.FONT_XTINY, mObjLow.toString(), C_GREEN, JC);
             txt(dc, mapX(mObjHigh), 354, Graphics.FONT_XTINY, mObjHigh.toString(), C_GREEN, JC);
