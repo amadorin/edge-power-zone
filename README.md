@@ -21,7 +21,7 @@ Diseño por defecto: tarjetas con barras de color (estilo Edge pro). Si algo no 
 
 ## De dónde sale el objetivo
 
-1. **Paso de entrenamiento activo** (TrainingPeaks > Garmin): el campo lee el rango de potencia del paso actual con `Activity.getCurrentWorkoutStep()` (Connect IQ API 3.2.0, soportado en Edge 1050/1060). Valores en vatios o en % de FTP (se convierten con tu FTP). En pantalla sale "PASO 215-258 W". Si el paso no tiene objetivo de potencia, no se dibuja zona.
+1. **Paso de entrenamiento activo** (TrainingPeaks > Garmin): el campo lee el rango de potencia del paso actual con `Activity.getCurrentWorkoutStep()` (Connect IQ API 3.2.0, soportado en Edge 1050/1060). Valores en vatios o en % de FTP (<150 se interpreta como % y se convierte con tu FTP). En pantalla sale "PASO 215-258 W". Si el paso no tiene objetivo de potencia, no se dibuja zona.
 2. **Sin entrenamiento cargado**: objetivo manual (por defecto 215-258 W, FTP 430 W).
 
 Nota: la documentación de Garmin dice que esa llamada lanza excepción en campos de datos, pero es una errata reconocida en el foro de desarrolladores; en el código va dentro de `try/catch` y, si falla, usa el objetivo manual. **Sin probar aún en el Edge real.**

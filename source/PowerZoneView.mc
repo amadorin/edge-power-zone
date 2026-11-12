@@ -94,6 +94,14 @@ class PowerZoneView extends WatchUi.DataField {
 
     // Objetivo de potencia del paso activo. Valores FIT: >1000 = vatios + 1000,
     // 0..1000 = % del FTP. Sin entrenamiento cargado: se queda el manual.
+    // >1000: vatios+1000 (FIT). 150..1000: vatios directos (el Edge mostro
+    // "387-408 W" para un paso "Personalizado"). <150: % del FTP.
+    private function toWatts(v as Number) as Number {
+        if (v > 1000) { return v - 1000; }
+        if (v >= 150) { return v; }
+        return (mFtp * v / 100.0 + 0.5).toNumber();
+    }
+
     private function readWorkoutStep() as Void {
         try {
             if (!(Activity has :getCurrentWorkoutStep)) { return; }
@@ -114,8 +122,8 @@ class PowerZoneView extends WatchUi.DataField {
                 mObjLow = 0; mObjHigh = 0; // paso sin objetivo de potencia
                 return;
             }
-            if (lo > 1000) { lo = lo - 1000; } else { lo = (mFtp * lo / 100.0 + 0.5).toNumber(); }
-            if (hi > 1000) { hi = hi - 1000; } else { hi = (mFtp * hi / 100.0 + 0.5).toNumber(); }
+            lo = toWatts(lo);
+            hi = toWatts(hi);
             mObjLow = lo;
             mObjHigh = hi;
         } catch (e) {
